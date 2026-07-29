@@ -1,0 +1,154 @@
+---
+title: "Evaluating EEG Foundation Models"
+subtitle: "what a benchmark number actually claims"
+summary: "The five dimensions an EEG foundation-model benchmark has to control — pretraining overlap, channel handling, corruption robustness, low-label adaptation, and task taxonomy — and why most existing evaluations cover only some of them."
+order: 15
+track: "foundation-models"
+group: "Models & Benchmarks"
+---
+
+import TestYourself from '../../../components/TestYourself.astro';
+
+A published accuracy figure for an EEG foundation model is a claim about a
+specific model, on a specific dataset, under a specific adaptation protocol,
+with a specific channel-handling pipeline. Change any one of those and the
+number moves. This chapter sets out the dimensions that determine whether two
+such numbers can be compared at all.
+
+## pretraining overlap
+
+The first question to ask about any reported transfer result is whether the
+downstream dataset was part of the pretraining corpus.
+
+Public EEG corpora are heavily reused. The large clinical archives that make
+pretraining possible are also the source of several standard evaluation tasks,
+so a model pretrained on "all available public EEG" has plausibly already seen
+the recordings it is later tested on. When that happens, a strong downstream
+score is partly a memorisation result, and the comparison against a model
+pretrained on a disjoint corpus is not meaningful.
+
+Individual papers often handle this for their own model by excluding downstream
+datasets from pretraining. What is much rarer is an *audit across models*: when a
+benchmark evaluates ten independently pretrained checkpoints, each with its own
+undocumented corpus, overlap has to be established per model–dataset pair rather
+than assumed away.
+
+## channel handling
+
+As the previous chapter described, models divide into fixed- and
+flexible-channel designs. A benchmark has to decide how to feed heterogeneous
+datasets to both, and every available option embeds a bias:
+
+- **Map everything to a common montage.** Comparable inputs, but discards the
+  flexible models' advantage and throws away channels on high-density data.
+- **Give each model its native format.** Plays to each design's strength, but
+  the models no longer see the same information.
+- **Exclude models that cannot handle the format.** Clean comparison among
+  those that remain, and silently narrows the field — convolutional tokenizers
+  with a hard-coded channel count are the usual casualty.
+
+None of these is wrong. What matters is that the choice is stated, because it
+determines which architectural family the benchmark structurally favours.
+
+<TestYourself answer="Zero-padding invents signal that the model reads as real">
+<Fragment slot="question">
+
+A benchmark maps a 2-channel sleep dataset onto a 19-channel montage by
+zero-filling the 17 missing positions. Beyond the obvious loss of information,
+what specific problem does this create for a model that was pretrained on full
+montages?
+
+</Fragment>
+<Fragment slot="answer">
+
+Flat channels are not a neutral absence — they are a signal. On real EEG, 17
+simultaneously isoelectric channels would be a profound abnormality, and a model
+pretrained on intact recordings has learned to treat near-zero amplitude as
+meaningful. The zero-padded input therefore falls far outside the pretraining
+distribution, and the resulting score reflects the model's response to an
+artificial condition rather than its ability to use the two real channels. This
+is why explicit masking, where the model is told which positions carry no
+electrode, behaves differently from zero-filling.
+
+</Fragment>
+</TestYourself>
+
+## robustness to channel corruption
+
+Clinical recordings lose channels. Electrodes come loose, impedances drift, and
+long-term monitoring routinely runs with a bad lead for hours. A model intended
+for clinical use should degrade gracefully as channels drop out.
+
+Several papers report some version of this, but usually as a property of their
+own model on one or two tasks. Evaluating it benchmark-wide — applying the same
+channel masks across every task and model — turns an architectural anecdote into
+a comparable measurement, and it is the dimension where flexible-channel designs
+have the clearest theoretical advantage.
+
+## adaptation with few or no labels
+
+Since the motivation for pretraining is label scarcity, the adaptation protocol
+is not a detail; it is the point.
+
+**Full fine-tuning** on the complete labelled training set measures the ceiling,
+but it is the setting where pretraining matters least — with enough labels, a
+well-tuned supervised baseline is often competitive. **Few-shot** adaptation,
+using a handful of labelled examples per class, tests the actual claim.
+**Zero-shot** transfer, with no downstream labels at all, tests whether the
+representation is clinically structured on its own.
+
+Two distinctions are easy to blur. Zero-shot *reconstruction* on an unseen
+device is a signal-modelling result, not a task-adaptation result. And
+leave-one-subject-out evaluation measures cross-subject generalisation, which is
+a different axis from label efficiency — a model can be excellent at one and
+poor at the other.
+
+## what the tasks are
+
+Finally, a benchmark's task list encodes a view of what EEG models are for.
+Collections assembled from BCI paradigms — motor imagery, SSVEP, P300 — measure
+something quite different from collections built around clinical reads, such as
+abnormality detection, seizure and IED detection, sleep staging, and
+encephalopathy grading. A model can lead on one family and trail on the other,
+so an aggregate "average accuracy" across a mixed collection is largely a
+statement about the collection's composition.
+
+Organising tasks into an explicit taxonomy — families of clinical capability,
+subdivided into specific task types — makes this visible, and lets a result be
+read as "strong on paroxysmal event detection, weak on continuous state
+estimation" rather than as a single ranking.
+
+<TestYourself answer="Because the average is weighted by whatever the benchmark happened to include">
+<Fragment slot="question">
+
+Two benchmarks evaluate the same set of models and report contradictory
+rankings, with no methodological error in either. What is the most likely
+explanation?
+
+</Fragment>
+<Fragment slot="answer">
+
+Their task compositions differ. If one benchmark is weighted toward BCI
+paradigms and the other toward clinical diagnostic tasks, a model tuned for
+short, stimulus-locked, single-subject decoding will rank highly on the first
+and poorly on the second — and averaging over each collection produces two
+honest but incomparable rankings. This is the practical reason to report results
+per task family instead of, or in addition to, an aggregate: the aggregate is a
+property of the benchmark's composition as much as of the models.
+
+</Fragment>
+</TestYourself>
+
+## reading a benchmark table
+
+Put together, the checklist for any reported result is:
+
+1. Was the downstream dataset audited against this model's pretraining corpus?
+2. How were heterogeneous montages fed to models with different channel assumptions?
+3. Was robustness tested under a channel-corruption protocol applied to all models?
+4. Which adaptation regime produced the number — full, few-shot, or zero-shot?
+5. What is the task composition, and is the result broken down by capability?
+
+Few published evaluations satisfy all five, and that is not a criticism of any
+one paper — each was built to answer a narrower question. It is a reason to read
+the protocol section before the results table.

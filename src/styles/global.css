@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --color-paper: #fbfaf7;
+  --color-ink: #1a1a18;
+  --color-muted: #6b6862;
+  --color-rule: #e2ded4;
+  --color-accent: #8a5a2b;
+  --color-accent-soft: #f3ece1;
+
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Source Serif 4', Georgia, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Keep headings clear of the sticky header when jumping to an anchor. */
+  scroll-padding-top: 6rem;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reading column: serif body text at a comfortable measure. */
+.prose-chapter {
+  --tw-prose-body: var(--color-ink);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-quotes: var(--color-muted);
+  --tw-prose-hr: var(--color-rule);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.prose-chapter h2 {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border-top: 1px solid var(--color-rule);
+  padding-top: 1.75rem;
+  margin-top: 3.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.prose-chapter h3 {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 650;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-chapter img {
+  width: 100%;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.375rem;
+  background: #fff;
+}
+
+.prose-chapter :where(strong) {
+  font-weight: 650;
+}
+
+/* Anchor links revealed on heading hover. */
+.heading-anchor {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+:where(h2, h3):hover .heading-anchor {
+  opacity: 1;
+}

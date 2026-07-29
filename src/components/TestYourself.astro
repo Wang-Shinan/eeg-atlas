@@ -1,0 +1,49 @@
+---
+interface Props {
+  /** Short verdict shown first when the answer is revealed. */
+  answer: string;
+  /** Teaser shown before the question itself is opened. */
+  prompt?: string;
+}
+
+const { answer, prompt = 'Tap to reveal a question about this section' } = Astro.props;
+---
+
+{/* Nested <details> gives progressive disclosure with no client JS. */}
+<section class="not-prose my-10 rounded-lg border border-rule bg-accent-soft/60">
+  <details class="group">
+    <summary
+      class="flex cursor-pointer list-none items-baseline gap-3 px-5 py-4 font-sans text-sm font-semibold tracking-wide text-ink"
+    >
+      <span class="text-[0.6875rem] uppercase tracking-[0.14em] text-accent">Test yourself</span>
+      <span class="font-normal text-muted group-open:hidden">{prompt}</span>
+    </summary>
+
+    <div class="border-t border-rule px-5 py-4">
+      <div class="font-serif text-[1.0625rem] leading-relaxed text-ink [&_img]:mt-3 [&_img]:w-full [&_img]:rounded [&_img]:border [&_img]:border-rule [&_img]:bg-white">
+        <slot name="question" />
+      </div>
+
+      <details class="mt-4">
+        <summary
+          class="inline-flex cursor-pointer list-none items-center rounded border border-accent/40 px-3 py-1.5 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-accent hover:bg-accent/10"
+        >
+          Reveal answer
+        </summary>
+        <div class="mt-4 border-l-2 border-accent pl-4">
+          <p class="font-sans text-base font-semibold text-ink">{answer}</p>
+          <div class="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink [&_img]:mt-3 [&_img]:w-full [&_img]:rounded [&_img]:border [&_img]:border-rule [&_img]:bg-white">
+            <slot name="answer" />
+          </div>
+        </div>
+      </details>
+    </div>
+  </details>
+</section>
+
+<style>
+  /* Safari still paints the default disclosure triangle without this. */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

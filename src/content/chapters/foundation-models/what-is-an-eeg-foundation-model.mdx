@@ -1,0 +1,144 @@
+---
+title: "What Is an EEG Foundation Model"
+subtitle: "large-scale pretraining meets clinical signal"
+summary: "Why EEG is being pushed through the foundation-model recipe, what self-supervised pretraining actually learns from raw voltage, and the structural problems that make EEG harder than text or images."
+order: 14
+track: "foundation-models"
+group: "Models & Benchmarks"
+---
+
+import TestYourself from '../../../components/TestYourself.astro';
+
+The preceding chapters treat EEG as something a trained human reads. This track
+covers the parallel effort to make EEG something a *model* reads: large neural
+networks pretrained on unlabelled recordings, then adapted to specific tasks.
+
+## why pretraining is attractive for eeg
+
+Every clinical EEG task shares the same bottleneck. Labels are expensive because
+they require an expert to sit with the tracing, and each labelled dataset is
+small, single-site, and recorded on one particular hardware configuration. A
+model trained from scratch on a few hundred labelled recordings learns the
+idiosyncrasies of that site as readily as it learns neurophysiology.
+
+Unlabelled EEG, by contrast, is abundant. Hospitals accumulate years of routine
+and long-term monitoring recordings that are never used beyond the original
+read. The foundation-model premise is that a single model pretrained on this
+unlabelled mass learns a representation of normal cortical rhythms, artifact,
+and state transitions, which then transfers to downstream tasks with far fewer
+labels than training from scratch would need.
+
+This is the same argument that produced foundation models for text and images.
+What makes EEG different is that the input is not a self-contained document or
+picture — it is a set of simultaneous time series whose meaning depends on
+*where each one was recorded from*.
+
+## what the model actually sees
+
+Recall from the montage chapter that a channel is a difference between two
+electrodes, and that the same underlying activity looks different under a
+bipolar chain than under an average reference. A model consuming raw channel
+data inherits every one of those technical choices.
+
+Most current systems therefore standardise aggressively before the model sees
+anything: resample to a fixed rate, band-pass filter, re-reference to a common
+scheme, and cut the recording into short windows of a few seconds. The window
+is then tokenised — usually by splitting each channel into short patches and
+embedding each patch, so a 10-second, 19-channel window becomes a sequence of a
+few hundred tokens that a transformer can attend over.
+
+The critical design decision is how position is encoded. A language model needs
+to know token order. An EEG model needs to know token order *and* which
+electrode each token came from, because "4 Hz activity at F7" and "4 Hz activity
+at O2" mean entirely different things clinically.
+
+<TestYourself answer="It would lose the ability to localise">
+<Fragment slot="question">
+
+If a model embedded every channel identically, with no information about which
+electrode a patch came from, what class of EEG findings would it become
+structurally unable to represent?
+
+</Fragment>
+<Fragment slot="answer">
+
+Anything defined by location. Focal slowing, lateralised discharges, phase
+reversals and the anteroposterior gradient are all statements about *where*
+activity appears relative to the rest of the head. Without electrode identity
+the model can still represent global properties — dominant frequency, overall
+amplitude, burst suppression — but focal and lateralised findings collapse into
+"some channel somewhere is doing this", which is exactly the information a
+clinical read depends on.
+
+</Fragment>
+</TestYourself>
+
+## pretraining objectives
+
+Three families of self-supervised objective dominate.
+
+**Masked reconstruction** hides a subset of patches and asks the model to
+reconstruct them from the surrounding context, either in the time domain or
+after quantising signal patches into a discrete codebook. This is the direct
+analogue of masked language modelling and is currently the most common choice.
+
+**Contrastive learning** builds two augmented views of the same window —
+different crops, channel dropout, added noise — and trains the model to embed
+them close together while pushing apart windows from different recordings or
+different subjects. The augmentations encode what the designer considers
+clinically irrelevant variation.
+
+**Predictive coding** asks the model to predict the representation of a future
+segment from the past, which fits EEG's status as a continuous ongoing process
+rather than a set of independent samples.
+
+All three share one property worth stating plainly: the objective never sees a
+diagnosis. Whatever clinical structure the representation contains is there
+because it was useful for reconstructing or discriminating raw signal.
+
+## the heterogeneity problem
+
+The hardest structural obstacle is that EEG datasets do not agree on their input
+format. One dataset has 19 channels in the 10–20 layout; another has 64 in a
+high-density cap; a sleep dataset may have 2. Sampling rates differ, reference
+schemes differ, and electrode naming conventions differ.
+
+Models split into two camps in response. **Fixed-channel** models commit to one
+montage and require every dataset to be mapped onto it, discarding extra
+channels and zero-filling missing ones. **Flexible-channel** models take
+electrode identity or 3D coordinates as an explicit input, letting the same
+weights consume any montage — at the cost of a more complicated architecture.
+
+This split matters more than it first appears, because it determines what a fair
+comparison between two models even looks like. A benchmark that maps everything
+onto a fixed 19-channel montage has quietly removed the main advantage of the
+flexible-channel models; one that evaluates each model on its native format is
+no longer comparing them on equal inputs. The next chapter takes up this problem
+directly.
+
+<TestYourself answer="Because the two models are no longer solving the same task">
+<Fragment slot="question">
+
+A benchmark reports that a fixed-channel model outperforms a flexible-channel
+model on a 64-channel dataset, after mapping the data down to 19 channels for
+both. Why is this result difficult to interpret?
+
+</Fragment>
+<Fragment slot="answer">
+
+The mapping step discarded 45 channels before either model ran. The
+flexible-channel model was designed to consume the full montage, so the
+benchmark measured it on inputs it was not built for, and the comparison says
+nothing about how it would perform with its intended input. The result is a
+statement about the two architectures *under a 19-channel constraint*, which is
+a legitimate question, but it is not the question "which model is better on this
+dataset" — and reporting it as the latter overstates the fixed-channel result.
+
+</Fragment>
+</TestYourself>
+
+## where this track goes
+
+The remaining chapters cover how these models are evaluated, where current
+benchmarks disagree, and what a claim of "state of the art on EEG" is actually
+measuring.

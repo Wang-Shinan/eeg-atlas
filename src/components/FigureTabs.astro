@@ -1,0 +1,71 @@
+---
+export interface FigureItem {
+  src: string;
+  label: string;
+  caption?: string;
+}
+
+interface Props {
+  figures: FigureItem[];
+}
+
+const { figures } = Astro.props;
+const showTabs = figures.length > 1;
+---
+
+<figure class="not-prose my-8" data-figure-tabs>
+  {
+    showTabs && (
+      <div role="tablist" class="mb-3 flex flex-wrap gap-1.5">
+        {figures.map((figure, index) => (
+          <button
+            type="button"
+            role="tab"
+            data-figure-tab={index}
+            aria-selected={index === 0}
+            class="rounded border border-rule px-3 py-1 font-sans text-xs font-medium capitalize text-muted transition-colors hover:border-accent/50 aria-selected:border-accent aria-selected:bg-accent aria-selected:text-white"
+          >
+            {figure.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    figures.map((figure, index) => (
+      <div data-figure-panel={index} hidden={index !== 0}>
+        <img
+          src={figure.src}
+          alt={figure.caption ?? figure.label}
+          loading="lazy"
+          class="w-full rounded border border-rule bg-white"
+        />
+        {figure.caption && (
+          <figcaption class="mt-2 font-sans text-xs text-muted">{figure.caption}</figcaption>
+        )}
+      </div>
+    ))
+  }
+</figure>
+
+<script>
+  // One listener per group; panels are plain hidden divs so the page still
+  // shows the first figure when JS is unavailable.
+  for (const group of document.querySelectorAll<HTMLElement>('[data-figure-tabs]')) {
+    const tabs = group.querySelectorAll<HTMLButtonElement>('[data-figure-tab]');
+    const panels = group.querySelectorAll<HTMLElement>('[data-figure-panel]');
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        const selected = tab.dataset.figureTab;
+        for (const other of tabs) {
+          other.setAttribute('aria-selected', String(other.dataset.figureTab === selected));
+        }
+        for (const panel of panels) {
+          panel.hidden = panel.dataset.figurePanel !== selected;
+        }
+      });
+    }
+  }
+</script>

@@ -1,0 +1,18 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = 'Review' } = Astro.props;
+---
+
+<section class="not-prose my-12 rounded-lg border border-rule bg-white/70 p-6">
+  <h2 class="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-accent">
+    {title}
+  </h2>
+  <div
+    class="mt-4 font-serif text-[1.0625rem] leading-relaxed [&_li]:mb-2 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+  >
+    <slot />
+  </div>
+</section>
