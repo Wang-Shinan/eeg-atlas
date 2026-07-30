@@ -29,59 +29,55 @@ const { prev, next } = await getChapterNeighbors(chapter.id);
 ---
 
 <BaseLayout title={chapter.data.title} description={chapter.data.summary}>
-  <div class="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 py-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
-    <article class="min-w-0">
-      <header class="border-b border-rule pb-8">
-        <p class="font-sans text-xs tracking-[0.08em] text-muted">
-          {chapterNumber(chapter)} · {chapter.data.group}
-        </p>
-        <h1 class="mt-3 font-serif text-4xl font-semibold leading-tight tracking-tight">
-          {chapter.data.title}
-        </h1>
-        <p class="mt-2 font-serif text-lg italic text-muted">{chapter.data.subtitle}</p>
-        {
-          chapter.data.summary && (
-            <p class="mt-5 max-w-2xl font-serif text-[1.0625rem] leading-relaxed">
-              {chapter.data.summary}
-            </p>
-          )
-        }
-      </header>
+  <article class="min-w-0">
+    <header class="border-b border-rule pb-8">
+      <p class="font-sans text-xs tracking-[0.08em] text-muted">
+        {chapterNumber(chapter)} · {chapter.data.group}
+      </p>
+      <h1 class="mt-3 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+        {chapter.data.title}
+      </h1>
+      <p class="mt-2 font-serif text-lg italic text-muted">{chapter.data.subtitle}</p>
+      {
+        chapter.data.summary && (
+          <p class="mt-5 max-w-2xl font-serif text-[1.0625rem] leading-relaxed">
+            {chapter.data.summary}
+          </p>
+        )
+      }
+    </header>
 
-      <div class="prose prose-chapter mt-10 max-w-none">
-        <Content />
-      </div>
+    <div class="prose prose-chapter mt-10 max-w-none">
+      <Content />
+    </div>
 
-      <nav class="mt-20 grid gap-3 border-t border-rule pt-8 sm:grid-cols-2">
-        {
-          prev ? (
-            <a
-              href={chapterHref(prev)}
-              class="rounded-lg border border-rule p-4 transition-colors hover:border-accent/50 hover:bg-accent-soft/50"
-            >
-              <span class="font-sans text-xs tracking-[0.08em] text-muted">上一章</span>
-              <span class="mt-1 block font-serif text-lg font-medium">{prev.data.title}</span>
-            </a>
-          ) : (
-            <span />
-          )
-        }
-        {
-          next && (
-            <a
-              href={chapterHref(next)}
-              class="rounded-lg border border-rule p-4 text-right transition-colors hover:border-accent/50 hover:bg-accent-soft/50 sm:col-start-2"
-            >
-              <span class="font-sans text-xs tracking-[0.08em] text-muted">下一章</span>
-              <span class="mt-1 block font-serif text-lg font-medium">{next.data.title}</span>
-            </a>
-          )
-        }
-      </nav>
-    </article>
+    <nav class="mt-16 grid gap-3 border-t border-rule pt-8 sm:grid-cols-2">
+      {
+        prev ? (
+          <a
+            href={chapterHref(prev)}
+            class="rounded-lg border border-rule p-4 transition-colors hover:border-accent/50 hover:bg-accent-soft/50"
+          >
+            <span class="font-sans text-xs tracking-[0.08em] text-muted">上一章</span>
+            <span class="mt-1 block font-serif text-lg font-medium">{prev.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a
+            href={chapterHref(next)}
+            class="rounded-lg border border-rule p-4 text-right transition-colors hover:border-accent/50 hover:bg-accent-soft/50 sm:col-start-2"
+          >
+            <span class="font-sans text-xs tracking-[0.08em] text-muted">下一章</span>
+            <span class="mt-1 block font-serif text-lg font-medium">{next.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
 
-    <aside class="hidden lg:block">
-      <TableOfContents headings={headings} />
-    </aside>
-  </div>
+  <TableOfContents slot="rail" headings={headings} />
 </BaseLayout>

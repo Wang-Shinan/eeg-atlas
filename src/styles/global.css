@@ -79,3 +79,26 @@ body {
 :where(h2, h3):hover .heading-anchor {
   opacity: 1;
 }
+
+
+/* Mobile nav drawer — sidebar is nested, so Tailwind peer/ will not reach it. */
+#nav-overlay {
+  display: none;
+}
+body:has(#nav-toggle:checked) #nav-overlay {
+  display: block;
+}
+#site-sidebar {
+  transform: translateX(-100%);
+}
+body:has(#nav-toggle:checked) #site-sidebar {
+  transform: translateX(0);
+}
+@media (min-width: 1024px) {
+  #site-sidebar {
+    transform: none;
+  }
+  body:has(#nav-toggle:checked) #nav-overlay {
+    display: none;
+  }
+}

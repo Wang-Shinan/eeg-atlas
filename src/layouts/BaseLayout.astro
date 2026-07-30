@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { site } from '../site.config';
 import { withBase } from '../lib/urls';
+import SidebarNav from '../components/SidebarNav.astro';
 
 interface Props {
   title?: string;
@@ -10,6 +11,8 @@ interface Props {
 
 const { title, description = site.description } = Astro.props;
 const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — ${site.tagline}`;
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const hasRail = Astro.slots.has('rail');
 ---
 
 <!doctype html>
@@ -22,8 +25,16 @@ const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — ${sit
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
   </head>
   <body class="min-h-screen">
-    <header class="sticky top-0 z-20 border-b border-rule bg-paper/85 backdrop-blur">
-      <div class="mx-auto flex max-w-6xl items-baseline gap-4 px-6 py-4">
+    <input id="nav-toggle" type="checkbox" class="sr-only" />
+
+    <header class="sticky top-0 z-30 border-b border-rule bg-paper/90 backdrop-blur">
+      <div class="mx-auto flex max-w-[90rem] items-center gap-3 px-4 py-3 sm:px-6">
+        <label
+          for="nav-toggle"
+          class="inline-flex cursor-pointer items-center justify-center rounded border border-rule px-2.5 py-1.5 font-sans text-xs text-ink lg:hidden"
+        >
+          目录
+        </label>
         <a href={withBase('/')} class="font-serif text-lg font-semibold tracking-tight text-ink">
           {site.title}
         </a>
@@ -31,16 +42,58 @@ const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — ${sit
       </div>
     </header>
 
-    <main>
-      <slot />
-    </main>
+    <label
+      id="nav-overlay"
+      for="nav-toggle"
+      class="fixed inset-0 z-30 bg-ink/25 lg:hidden"
+      aria-hidden="true"
+    ></label>
 
-    <footer class="mt-24 border-t border-rule">
-      <div class="mx-auto max-w-6xl px-6 py-10 font-sans text-xs leading-relaxed text-muted">
+    <div
+      class:list={[
+        'mx-auto grid max-w-[90rem] lg:grid-cols-[16rem_minmax(0,1fr)]',
+        hasRail && 'xl:grid-cols-[16rem_minmax(0,1fr)_13rem]',
+      ]}
+    >
+      <aside
+        id="site-sidebar"
+        class="fixed inset-y-0 left-0 z-40 flex w-[min(20rem,88vw)] flex-col border-r border-rule bg-paper transition-transform duration-200 lg:static lg:z-auto lg:w-auto lg:bg-transparent"
+      >
+        <div class="flex items-center justify-between border-b border-rule px-4 py-3 lg:hidden">
+          <span class="font-sans text-xs font-medium text-muted">章节导航</span>
+          <label for="nav-toggle" class="cursor-pointer font-sans text-xs text-accent">关闭</label>
+        </div>
+        <div class="flex-1 overflow-y-auto px-3 py-5 lg:sticky lg:top-14 lg:max-h-[calc(100vh-3.5rem)] lg:px-4 lg:py-8">
+          <SidebarNav currentPath={currentPath} />
+        </div>
+      </aside>
+
+      <div class="min-w-0 px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <slot />
+      </div>
+
+      {
+        hasRail && (
+          <aside class="hidden border-l border-rule xl:block">
+            <div class="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto px-4 py-8">
+              <slot name="rail" />
+            </div>
+          </aside>
+        )
+      }
+    </div>
+
+    <footer class="border-t border-rule">
+      <div class="mx-auto max-w-[90rem] px-4 py-10 font-sans text-xs leading-relaxed text-muted sm:px-6 lg:pl-[calc(16rem+1.5rem)]">
         <p>{site.title} — {site.tagline}</p>
         <p class="mt-2">
           原创中文教学站点：脑电图判读、EEG 基础模型，以及
-          <a class="underline decoration-rule hover:text-ink" href="https://github.com/Omni-Intel/dataset-rules">Dataset Rules</a>
+          <a
+            class="underline decoration-rule hover:text-ink"
+            href="https://github.com/Omni-Intel/dataset-rules"
+          >
+            Dataset Rules
+          </a>
           数据规范。
         </p>
       </div>
