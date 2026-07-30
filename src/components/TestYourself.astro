@@ -6,7 +6,7 @@ interface Props {
   prompt?: string;
 }
 
-const { answer, prompt = 'Tap to reveal a question about this section' } = Astro.props;
+const { answer, prompt = '点击展开本节自测题' } = Astro.props;
 ---
 
 {/* Nested <details> gives progressive disclosure with no client JS. */}
@@ -15,7 +15,7 @@ const { answer, prompt = 'Tap to reveal a question about this section' } = Astro
     <summary
       class="flex cursor-pointer list-none items-baseline gap-3 px-5 py-4 font-sans text-sm font-semibold tracking-wide text-ink"
     >
-      <span class="text-[0.6875rem] uppercase tracking-[0.14em] text-accent">Test yourself</span>
+      <span class="text-[0.6875rem] tracking-[0.08em] text-accent">自测</span>
       <span class="font-normal text-muted group-open:hidden">{prompt}</span>
     </summary>
 
@@ -26,9 +26,9 @@ const { answer, prompt = 'Tap to reveal a question about this section' } = Astro
 
       <details class="mt-4">
         <summary
-          class="inline-flex cursor-pointer list-none items-center rounded border border-accent/40 px-3 py-1.5 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-accent hover:bg-accent/10"
+          class="inline-flex cursor-pointer list-none items-center rounded border border-accent/40 px-3 py-1.5 font-sans text-xs font-semibold tracking-[0.06em] text-accent hover:bg-accent/10"
         >
-          Reveal answer
+          显示答案
         </summary>
         <div class="mt-4 border-l-2 border-accent pl-4">
           <p class="font-sans text-base font-semibold text-ink">{answer}</p>

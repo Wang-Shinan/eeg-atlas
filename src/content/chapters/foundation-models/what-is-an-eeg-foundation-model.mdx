@@ -1,144 +1,79 @@
 ---
-title: "What Is an EEG Foundation Model"
-subtitle: "large-scale pretraining meets clinical signal"
-summary: "Why EEG is being pushed through the foundation-model recipe, what self-supervised pretraining actually learns from raw voltage, and the structural problems that make EEG harder than text or images."
+title: "什么是 EEG 基础模型"
+subtitle: "大规模预训练遇见临床信号"
+summary: "为什么要把 EEG 推进基础模型范式，自监督预训练究竟从原始电压里学到什么，以及 EEG 比文本、图像更难的结构性原因。"
 order: 14
 track: "foundation-models"
-group: "Models & Benchmarks"
+group: "模型与评测"
 ---
 
 import TestYourself from '../../../components/TestYourself.astro';
 
-The preceding chapters treat EEG as something a trained human reads. This track
-covers the parallel effort to make EEG something a *model* reads: large neural
-networks pretrained on unlabelled recordings, then adapted to specific tasks.
+前面的章节把 EEG 当作训练有素的人去「读」的东西。本专题讲的是另一条平行路线：让
+*模型*去读 EEG——在无标注记录上预训练大型神经网络，再适配到具体任务。
 
-## why pretraining is attractive for eeg
+## 为什么预训练适合 EEG
 
-Every clinical EEG task shares the same bottleneck. Labels are expensive because
-they require an expert to sit with the tracing, and each labelled dataset is
-small, single-site, and recorded on one particular hardware configuration. A
-model trained from scratch on a few hundred labelled recordings learns the
-idiosyncrasies of that site as readily as it learns neurophysiology.
+几乎每个临床 EEG 任务都卡在同一个瓶颈上。标注昂贵，因为必须有专家对着波形逐段判读；每个有标注的数据集又往往规模小、单中心、绑定某一种硬件配置。从几百条有标注记录从头训练的模型，学到的既有神经生理，也很容易有该中心的设备癖性。
 
-Unlabelled EEG, by contrast, is abundant. Hospitals accumulate years of routine
-and long-term monitoring recordings that are never used beyond the original
-read. The foundation-model premise is that a single model pretrained on this
-unlabelled mass learns a representation of normal cortical rhythms, artifact,
-and state transitions, which then transfers to downstream tasks with far fewer
-labels than training from scratch would need.
+无标注 EEG 则很充裕。医院堆积着多年的常规与长程监测记录，原始读图之外几乎不再使用。基础模型的前提是：在这批无标注海量数据上预训练一个模型，让它学到正常皮层节律、伪迹与状态转换的表示，再迁移到下游任务时，所需标注远少于从头训练。
 
-This is the same argument that produced foundation models for text and images.
-What makes EEG different is that the input is not a self-contained document or
-picture — it is a set of simultaneous time series whose meaning depends on
-*where each one was recorded from*.
+这与文本、图像领域催生基础模型的论证相同。EEG 的不同之处在于：输入不是一份自足的文档或一幅图，而是一组同步时间序列，其含义取决于*每一路是从哪里记下来的*。
 
-## what the model actually sees
+## 模型实际看到什么
 
-Recall from the montage chapter that a channel is a difference between two
-electrodes, and that the same underlying activity looks different under a
-bipolar chain than under an average reference. A model consuming raw channel
-data inherits every one of those technical choices.
+回想导联一章：一个通道是两个电极之差，同一底层活动在双极链与平均参考下看起来完全不同。吃原始通道数据的模型会继承所有这些技术选择。
 
-Most current systems therefore standardise aggressively before the model sees
-anything: resample to a fixed rate, band-pass filter, re-reference to a common
-scheme, and cut the recording into short windows of a few seconds. The window
-is then tokenised — usually by splitting each channel into short patches and
-embedding each patch, so a 10-second, 19-channel window becomes a sequence of a
-few hundred tokens that a transformer can attend over.
+因此多数现有系统在模型看见数据之前就强行标准化：重采样到固定频率、带通滤波、统一参考方案，再切成数秒短窗。窗口再被分词——通常把每路切成短 patch 并嵌入，于是一个 10 秒、19 通道的窗口变成几百个 token，供 Transformer 做注意力。
 
-The critical design decision is how position is encoded. A language model needs
-to know token order. An EEG model needs to know token order *and* which
-electrode each token came from, because "4 Hz activity at F7" and "4 Hz activity
-at O2" mean entirely different things clinically.
+关键设计选择是位置如何编码。语言模型只需知道 token 顺序。EEG 模型既要知道时间顺序，也要知道每个 token 来自哪根电极——因为「F7 的 4 Hz 活动」与「O2 的 4 Hz 活动」在临床上完全不是一回事。
 
-<TestYourself answer="It would lose the ability to localise">
+<TestYourself answer="它会丧失定位能力">
 <Fragment slot="question">
 
-If a model embedded every channel identically, with no information about which
-electrode a patch came from, what class of EEG findings would it become
-structurally unable to represent?
+如果模型对每一路用完全相同的嵌入，不携带「这个 patch 来自哪根电极」的信息，它在结构上无法表示哪一类 EEG 发现？
 
 </Fragment>
 <Fragment slot="answer">
 
-Anything defined by location. Focal slowing, lateralised discharges, phase
-reversals and the anteroposterior gradient are all statements about *where*
-activity appears relative to the rest of the head. Without electrode identity
-the model can still represent global properties — dominant frequency, overall
-amplitude, burst suppression — but focal and lateralised findings collapse into
-"some channel somewhere is doing this", which is exactly the information a
-clinical read depends on.
+一切由位置定义的发现。局灶慢化、偏侧放电、相位反转、前后梯度，说的都是活动相对全头*出现在哪里*。没有电极身份，模型仍可表示全局属性——主导频率、总体振幅、爆发抑制——但局灶与偏侧发现会坍缩成「某路某处在做这件事」，而这恰恰是临床读图所依赖的信息。
 
 </Fragment>
 </TestYourself>
 
-## pretraining objectives
+## 预训练目标
 
-Three families of self-supervised objective dominate.
+三类自监督目标目前占主导。
 
-**Masked reconstruction** hides a subset of patches and asks the model to
-reconstruct them from the surrounding context, either in the time domain or
-after quantising signal patches into a discrete codebook. This is the direct
-analogue of masked language modelling and is currently the most common choice.
+**掩码重建**隐藏一部分 patch，要求模型依据周围上下文重建它们，可以在时域进行，也可以先把信号 patch 量化成离散码本再重建。这是掩码语言模型的直接类比，也是目前最常见的选择。
 
-**Contrastive learning** builds two augmented views of the same window —
-different crops, channel dropout, added noise — and trains the model to embed
-them close together while pushing apart windows from different recordings or
-different subjects. The augmentations encode what the designer considers
-clinically irrelevant variation.
+**对比学习**对同一窗口构造两个增强视图——不同裁剪、通道 dropout、加噪——训练模型把它们嵌到相近位置，同时推远来自不同记录或不同受试者的窗口。增强方式编码了设计者认为临床上无关的变异。
 
-**Predictive coding** asks the model to predict the representation of a future
-segment from the past, which fits EEG's status as a continuous ongoing process
-rather than a set of independent samples.
+**预测编码**要求模型根据过去预测未来片段的表示，这更贴合 EEG 作为连续过程、而非一组独立样本的性质。
 
-All three share one property worth stating plainly: the objective never sees a
-diagnosis. Whatever clinical structure the representation contains is there
-because it was useful for reconstructing or discriminating raw signal.
+三者有一个值得明说的共同点：目标函数从未见过诊断。表示里若含有临床结构，那是因为它对重建或区分原始信号有用。
 
-## the heterogeneity problem
+## 异构问题
 
-The hardest structural obstacle is that EEG datasets do not agree on their input
-format. One dataset has 19 channels in the 10–20 layout; another has 64 in a
-high-density cap; a sleep dataset may have 2. Sampling rates differ, reference
-schemes differ, and electrode naming conventions differ.
+最难的结构障碍是：EEG 数据集在输入格式上并不一致。有的是 10–20 布局的 19 通道；有的是高密度帽的 64 通道；睡眠数据可能只有 2 路。采样率不同、参考方案不同、电极命名也不同。
 
-Models split into two camps in response. **Fixed-channel** models commit to one
-montage and require every dataset to be mapped onto it, discarding extra
-channels and zero-filling missing ones. **Flexible-channel** models take
-electrode identity or 3D coordinates as an explicit input, letting the same
-weights consume any montage — at the cost of a more complicated architecture.
+模型因此分成两个阵营。**固定通道**模型认定一种导联，要求所有数据集映射上去，多余通道丢弃，缺失用零填充。**灵活通道**模型把电极身份或三维坐标作为显式输入，同一套权重可吃任意导联——代价是架构更复杂。
 
-This split matters more than it first appears, because it determines what a fair
-comparison between two models even looks like. A benchmark that maps everything
-onto a fixed 19-channel montage has quietly removed the main advantage of the
-flexible-channel models; one that evaluates each model on its native format is
-no longer comparing them on equal inputs. The next chapter takes up this problem
-directly.
+这一分裂比乍看上去更要紧，因为它决定了两个模型怎样才算公平比较。把一切映射到固定 19 通道的评测，等于悄悄拿走了灵活通道模型的主要优势；各自用原生格式评测，则不再是在同等输入上比较。下一章会直接讨论这个问题。
 
-<TestYourself answer="Because the two models are no longer solving the same task">
+<TestYourself answer="因为两个模型已经不再在解同一道题">
 <Fragment slot="question">
 
-A benchmark reports that a fixed-channel model outperforms a flexible-channel
-model on a 64-channel dataset, after mapping the data down to 19 channels for
-both. Why is this result difficult to interpret?
+某基准报告：在把 64 通道数据都映射到 19 通道之后，固定通道模型优于灵活通道模型。为什么这个结果很难解读？
 
 </Fragment>
 <Fragment slot="answer">
 
-The mapping step discarded 45 channels before either model ran. The
-flexible-channel model was designed to consume the full montage, so the
-benchmark measured it on inputs it was not built for, and the comparison says
-nothing about how it would perform with its intended input. The result is a
-statement about the two architectures *under a 19-channel constraint*, which is
-a legitimate question, but it is not the question "which model is better on this
-dataset" — and reporting it as the latter overstates the fixed-channel result.
+映射步骤在任一模型运行前就丢掉了 45 路通道。灵活通道模型本为完整导联设计，基准却在它并非为之所建的输入上测量它，因而比较无法说明它在预期输入上的表现。结果只是在*19 通道约束下*两种架构的陈述——这本身是合法问题，但不是「哪个模型在这份数据上更好」——若按后者报告，就会夸大固定通道的结果。
 
 </Fragment>
 </TestYourself>
 
-## where this track goes
+## 本专题接下来讲什么
 
-The remaining chapters cover how these models are evaluated, where current
-benchmarks disagree, and what a claim of "state of the art on EEG" is actually
-measuring.
+后续章节会讲这些模型如何评测、现有基准在何处分歧，以及「EEG 上的 state of the art」究竟在测量什么。

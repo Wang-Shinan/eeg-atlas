@@ -3,11 +3,11 @@ interface Props {
   title?: string;
 }
 
-const { title = 'Review' } = Astro.props;
+const { title = '要点复习' } = Astro.props;
 ---
 
 <section class="not-prose my-12 rounded-lg border border-rule bg-white/70 p-6">
-  <h2 class="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-accent">
+  <h2 class="font-sans text-[0.6875rem] font-semibold tracking-[0.08em] text-accent">
     {title}
   </h2>
   <div

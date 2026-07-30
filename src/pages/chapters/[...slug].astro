@@ -32,7 +32,7 @@ const { prev, next } = await getChapterNeighbors(chapter.id);
   <div class="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 py-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
     <article class="min-w-0">
       <header class="border-b border-rule pb-8">
-        <p class="font-sans text-xs uppercase tracking-[0.14em] text-muted">
+        <p class="font-sans text-xs tracking-[0.08em] text-muted">
           {chapterNumber(chapter)} · {chapter.data.group}
         </p>
         <h1 class="mt-3 font-serif text-4xl font-semibold leading-tight tracking-tight">
@@ -59,7 +59,7 @@ const { prev, next } = await getChapterNeighbors(chapter.id);
               href={chapterHref(prev)}
               class="rounded-lg border border-rule p-4 transition-colors hover:border-accent/50 hover:bg-accent-soft/50"
             >
-              <span class="font-sans text-xs uppercase tracking-[0.12em] text-muted">Previous</span>
+              <span class="font-sans text-xs tracking-[0.08em] text-muted">上一章</span>
               <span class="mt-1 block font-serif text-lg font-medium">{prev.data.title}</span>
             </a>
           ) : (
@@ -72,7 +72,7 @@ const { prev, next } = await getChapterNeighbors(chapter.id);
               href={chapterHref(next)}
               class="rounded-lg border border-rule p-4 text-right transition-colors hover:border-accent/50 hover:bg-accent-soft/50 sm:col-start-2"
             >
-              <span class="font-sans text-xs uppercase tracking-[0.12em] text-muted">Next</span>
+              <span class="font-sans text-xs tracking-[0.08em] text-muted">下一章</span>
               <span class="mt-1 block font-serif text-lg font-medium">{next.data.title}</span>
             </a>
           )

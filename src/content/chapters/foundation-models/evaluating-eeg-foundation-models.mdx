@@ -1,154 +1,88 @@
 ---
-title: "Evaluating EEG Foundation Models"
-subtitle: "what a benchmark number actually claims"
-summary: "The five dimensions an EEG foundation-model benchmark has to control — pretraining overlap, channel handling, corruption robustness, low-label adaptation, and task taxonomy — and why most existing evaluations cover only some of them."
+title: "如何评测 EEG 基础模型"
+subtitle: "一个基准数字实际在声称什么"
+summary: "EEG 基础模型评测必须控制的五个维度——预训练重叠、通道处理、通道损坏鲁棒性、少标签适配、任务分类体系——以及为什么多数现有评测只覆盖其中一部分。"
 order: 15
 track: "foundation-models"
-group: "Models & Benchmarks"
+group: "模型与评测"
 ---
 
 import TestYourself from '../../../components/TestYourself.astro';
 
-A published accuracy figure for an EEG foundation model is a claim about a
-specific model, on a specific dataset, under a specific adaptation protocol,
-with a specific channel-handling pipeline. Change any one of those and the
-number moves. This chapter sets out the dimensions that determine whether two
-such numbers can be compared at all.
+一篇论文里发布的 EEG 基础模型准确率，是关于「某个模型、某份数据、某种适配协议、某条通道处理流水线」的声明。改掉其中任何一项，数字就会动。本章列出决定两个数字能否比较的维度。
 
-## pretraining overlap
+## 预训练重叠
 
-The first question to ask about any reported transfer result is whether the
-downstream dataset was part of the pretraining corpus.
+对任何迁移结果，首先要问：下游数据集是否曾进入预训练语料。
 
-Public EEG corpora are heavily reused. The large clinical archives that make
-pretraining possible are also the source of several standard evaluation tasks,
-so a model pretrained on "all available public EEG" has plausibly already seen
-the recordings it is later tested on. When that happens, a strong downstream
-score is partly a memorisation result, and the comparison against a model
-pretrained on a disjoint corpus is not meaningful.
+公开 EEG 语料被反复复用。支撑预训练的大规模临床档案，往往也是若干标准评测任务的来源，因此在「所有可得公开 EEG」上预训练的模型，很有可能已经见过之后用来测试的记录。一旦如此，漂亮的下游分数有一部分是记忆，与在不相交语料上预训练的模型比较就失去意义。
 
-Individual papers often handle this for their own model by excluding downstream
-datasets from pretraining. What is much rarer is an *audit across models*: when a
-benchmark evaluates ten independently pretrained checkpoints, each with its own
-undocumented corpus, overlap has to be established per model–dataset pair rather
-than assumed away.
+单篇论文常通过把下游数据排除出预训练来处理自家模型。少见得多的是*跨模型审计*：当基准评测十个各自预训练、语料文档不全的 checkpoint 时，重叠必须按「模型–数据集」逐对核实，而不能一笔带过。
 
-## channel handling
+## 通道处理
 
-As the previous chapter described, models divide into fixed- and
-flexible-channel designs. A benchmark has to decide how to feed heterogeneous
-datasets to both, and every available option embeds a bias:
+上一章说过，模型分为固定通道与灵活通道。基准必须决定如何把异构数据喂给两者，而每种选项都嵌入偏见：
 
-- **Map everything to a common montage.** Comparable inputs, but discards the
-  flexible models' advantage and throws away channels on high-density data.
-- **Give each model its native format.** Plays to each design's strength, but
-  the models no longer see the same information.
-- **Exclude models that cannot handle the format.** Clean comparison among
-  those that remain, and silently narrows the field — convolutional tokenizers
-  with a hard-coded channel count are the usual casualty.
+- **全部映射到统一导联。** 输入可比，但抹掉灵活模型的优势，高密度数据还白白丢通道。
+- **各用原生格式。** 发挥各自设计长处，但模型看到的信息量不再相同。
+- **排除吃不了该格式的模型。** 留下的可比干净，却默默收窄赛场——硬编码通道数的卷积分词器通常是牺牲品。
 
-None of these is wrong. What matters is that the choice is stated, because it
-determines which architectural family the benchmark structurally favours.
+这些做法本身都不算错。要紧的是必须说清楚选了哪一种，因为它决定基准在结构上偏袒哪一类架构。
 
-<TestYourself answer="Zero-padding invents signal that the model reads as real">
+<TestYourself answer="零填充会制造模型当真的「信号」">
 <Fragment slot="question">
 
-A benchmark maps a 2-channel sleep dataset onto a 19-channel montage by
-zero-filling the 17 missing positions. Beyond the obvious loss of information,
-what specific problem does this create for a model that was pretrained on full
-montages?
+某基准把 2 通道睡眠数据映射到 19 通道导联，对缺失的 17 位做零填充。除了显而易见的信息损失，这对曾在完整导联上预训练的模型还会造成什么具体问题？
 
 </Fragment>
 <Fragment slot="answer">
 
-Flat channels are not a neutral absence — they are a signal. On real EEG, 17
-simultaneously isoelectric channels would be a profound abnormality, and a model
-pretrained on intact recordings has learned to treat near-zero amplitude as
-meaningful. The zero-padded input therefore falls far outside the pretraining
-distribution, and the resulting score reflects the model's response to an
-artificial condition rather than its ability to use the two real channels. This
-is why explicit masking, where the model is told which positions carry no
-electrode, behaves differently from zero-filling.
+平坦通道不是中性的「缺席」——它本身是一种信号。真实 EEG 上若 17 路同时等电位，会是严重异常；在完整记录上预训练的模型已学会把近零振幅当作有意义。零填充输入因此远落在预训练分布之外，得分反映的是模型对人造条件的反应，而非它利用两路真实通道的能力。这也是为何显式掩码（明确告知哪些位置没有电极）与零填充行为不同。
 
 </Fragment>
 </TestYourself>
 
-## robustness to channel corruption
+## 对通道损坏的鲁棒性
 
-Clinical recordings lose channels. Electrodes come loose, impedances drift, and
-long-term monitoring routinely runs with a bad lead for hours. A model intended
-for clinical use should degrade gracefully as channels drop out.
+临床记录会丢通道。电极松脱、阻抗漂移，长程监测常常带着坏导联跑上几小时。面向临床的模型应在通道逐步掉线时优雅退化。
 
-Several papers report some version of this, but usually as a property of their
-own model on one or two tasks. Evaluating it benchmark-wide — applying the same
-channel masks across every task and model — turns an architectural anecdote into
-a comparable measurement, and it is the dimension where flexible-channel designs
-have the clearest theoretical advantage.
+若干论文报告过某种版本，但多半只是自家模型在一两项任务上的性质。若在全基准范围内评测——对每个任务、每个模型施加同一套通道掩码——建筑轶事才会变成可比较的测量；而在这一维度上，灵活通道设计有最清晰的理论优势。
 
-## adaptation with few or no labels
+## 少标签或无标签适配
 
-Since the motivation for pretraining is label scarcity, the adaptation protocol
-is not a detail; it is the point.
+预训练的动机是标签稀缺，因此适配协议不是细节，而是重点。
 
-**Full fine-tuning** on the complete labelled training set measures the ceiling,
-but it is the setting where pretraining matters least — with enough labels, a
-well-tuned supervised baseline is often competitive. **Few-shot** adaptation,
-using a handful of labelled examples per class, tests the actual claim.
-**Zero-shot** transfer, with no downstream labels at all, tests whether the
-representation is clinically structured on its own.
+在完整有标注训练集上做**全量微调**测的是上限，却也是预训练最不重要的设定——标签够多时，调好的监督基线往往已有竞争力。**少样本**适配（每类只用少量有标注样例）才在检验那个主张。**零样本**迁移（下游完全无标签）检验表示本身是否已具临床结构。
 
-Two distinctions are easy to blur. Zero-shot *reconstruction* on an unseen
-device is a signal-modelling result, not a task-adaptation result. And
-leave-one-subject-out evaluation measures cross-subject generalisation, which is
-a different axis from label efficiency — a model can be excellent at one and
-poor at the other.
+有两处容易混淆。未见设备上的零样本*重建*是信号建模结果，不是任务适配结果。留一受试者交叉验证测的是跨人泛化，与标签效率是另一条轴——模型可以在一条上很强、在另一条上很弱。
 
-## what the tasks are
+## 任务是什么
 
-Finally, a benchmark's task list encodes a view of what EEG models are for.
-Collections assembled from BCI paradigms — motor imagery, SSVEP, P300 — measure
-something quite different from collections built around clinical reads, such as
-abnormality detection, seizure and IED detection, sleep staging, and
-encephalopathy grading. A model can lead on one family and trail on the other,
-so an aggregate "average accuracy" across a mixed collection is largely a
-statement about the collection's composition.
+最后，基准的任务列表编码了对「EEG 模型用来干什么」的看法。由 BCI 范式拼成的集合——运动想象、SSVEP、P300——与围绕临床读图拼成的集合（异常检测、发作与 IED 检测、睡眠分期、脑病分级）测的是很不同的东西。模型可以在一类上领先、在另一类上落后，因此在混合集合上的「平均准确率」很大程度上是在陈述集合的构成。
 
-Organising tasks into an explicit taxonomy — families of clinical capability,
-subdivided into specific task types — makes this visible, and lets a result be
-read as "strong on paroxysmal event detection, weak on continuous state
-estimation" rather than as a single ranking.
+把任务组织成显式分类——临床能力族，再细分为具体任务类型——能让这一点可见，并把结果读成「阵发性事件检测强、连续状态估计弱」，而不是单一排名。
 
-<TestYourself answer="Because the average is weighted by whatever the benchmark happened to include">
+<TestYourself answer="因为平均值被基准碰巧收录的任务加权了">
 <Fragment slot="question">
 
-Two benchmarks evaluate the same set of models and report contradictory
-rankings, with no methodological error in either. What is the most likely
-explanation?
+两个基准评测同一组模型，却报告矛盾的排名，两边方法上都没有明显错误。最可能的解释是什么？
 
 </Fragment>
 <Fragment slot="answer">
 
-Their task compositions differ. If one benchmark is weighted toward BCI
-paradigms and the other toward clinical diagnostic tasks, a model tuned for
-short, stimulus-locked, single-subject decoding will rank highly on the first
-and poorly on the second — and averaging over each collection produces two
-honest but incomparable rankings. This is the practical reason to report results
-per task family instead of, or in addition to, an aggregate: the aggregate is a
-property of the benchmark's composition as much as of the models.
+任务构成不同。若一个偏 BCI 范式、另一个偏临床诊断任务，专长于短时、刺激锁定、单受试者解码的模型会在前者排名靠前、后者靠后——各自集合上取平均，得到两份诚实但不可比的排名。这也是为何应按任务族报告结果，而不是（或除了）一个总平均：总平均既是模型的属性，也是基准构成的属性。
 
 </Fragment>
 </TestYourself>
 
-## reading a benchmark table
+## 怎么读一张基准表
 
-Put together, the checklist for any reported result is:
+综合起来，对任何报告结果的检查清单是：
 
-1. Was the downstream dataset audited against this model's pretraining corpus?
-2. How were heterogeneous montages fed to models with different channel assumptions?
-3. Was robustness tested under a channel-corruption protocol applied to all models?
-4. Which adaptation regime produced the number — full, few-shot, or zero-shot?
-5. What is the task composition, and is the result broken down by capability?
+1. 下游数据集是否对照该模型的预训练语料做过审计？
+2. 异构导联如何喂给通道假设不同的模型？
+3. 是否在对所有模型统一施加的通道损坏协议下测过鲁棒性？
+4. 数字来自哪种适配体制——全量、少样本还是零样本？
+5. 任务构成是什么，结果是否按能力拆开报告？
 
-Few published evaluations satisfy all five, and that is not a criticism of any
-one paper — each was built to answer a narrower question. It is a reason to read
-the protocol section before the results table.
+很少有已发表评测五项全满足，这不是批评任何一篇论文——每篇都在回答更窄的问题。但这正是读结果表之前先读协议部分的理由。
