@@ -3,10 +3,6 @@ dist/
 # generated types
 .astro/
 
-# Chapter text imported from the local vault by `npm run sync`.
-# Source material is not cleared for redistribution, so it stays out of git.
-src/content/chapters/eeg/
-
 # dependencies
 node_modules/
 
