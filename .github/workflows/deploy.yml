@@ -32,13 +32,21 @@ jobs:
           node-version: 22
           cache: npm
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/requirements-atlas.txt
+      - name: Install atlas build dependencies
+        run: python -m pip install -r scripts/requirements-atlas.txt
+
       - run: npm ci
 
       - name: Type check
         run: npm run check
 
-      # `build` deliberately does not run `npm run sync`; only content committed
-      # to the repository is published.
+      # No local chapter-vault import. Atlas geometry is reproducibly exported
+      # from pinned packages; the published site remains fully static.
       - name: Build
         run: npm run build:pages
 

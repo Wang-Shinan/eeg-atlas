@@ -1,0 +1,18 @@
+<figure class="signal-formation not-prose">
+  <ol aria-label="从神经元到 EEG 的四个层次">
+    <li><span>01 / 细胞</span><strong>跨膜电流与回流</strong><p>突触输入改变膜电导；电流经膜、细胞内部和细胞外空间形成回路。</p></li>
+    <li><span>02 / 群体</span><strong>空间与时间叠加</strong><p>源的位置、取向及时间关系，决定各贡献相加还是部分抵消。</p></li>
+    <li><span>03 / 头部</span><strong>容积传导</strong><p>脑、脑脊液、颅骨和头皮的导电结构，共同决定电极处的电位。</p></li>
+    <li><span>04 / 通道</span><strong>两个电位作差</strong><p><code>V_AB(t) = φ_A(t) − φ_B(t)</code><br />滤波与显示约定再决定屏幕上的样子。</p></li>
+  </ol>
+  <figcaption>原创概念流程：这里区分的是电流产生、场的叠加与测量，不是把神经信号画成依次穿过四站的脉冲。电极没有伸进细胞测量膜电位。</figcaption>
+</figure>
+<style>
+  .signal-formation { margin: 2.2rem 0; font-family: var(--font-sans,sans-serif); }
+  ol { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+  li { padding: 1.1rem; border: 1px solid var(--color-rule,#d5dfd7); border-radius: .5rem; background: #f5f7f2; }
+  span { display: block; color: #33766a; font-size: .7rem; letter-spacing: .08em; margin-bottom: .5rem; }
+  strong { font-size: 1rem; } p { font-size: .87rem; line-height: 1.8; margin: .6rem 0 0; }
+  code { font-size: .8rem; } figcaption { font-size: .8rem; line-height: 1.8; color: var(--color-muted,#64706c); }
+  @media(max-width:520px) { ol { grid-template-columns:1fr; } }
+</style>

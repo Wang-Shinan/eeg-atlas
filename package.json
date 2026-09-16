@@ -2,20 +2,23 @@
   "name": "site",
   "type": "module",
   "version": "0.0.1",
-  "engines": {
-    "node": ">=22.12.0"
-  },
+  "engines": { "node": ">=22.12.0" },
   "scripts": {
     "sync": "tsx scripts/sync-content.ts",
+    "assets:atlas": "node scripts/prepare-atlas.mjs",
+    "predev": "npm run assets:atlas",
     "dev": "npm run sync:rules && astro dev",
+    "prebuild": "npm run assets:atlas",
     "build": "astro build",
     "postbuild": "node scripts/sites-worker.mjs",
+    "prebuild:local": "npm run assets:atlas",
     "build:local": "npm run sync:rules && astro build",
     "preview": "astro preview",
     "check": "astro check",
     "test:editor": "node scripts/smoke-editor-worker.mjs",
     "astro": "astro",
     "sync:rules": "tsx scripts/sync-dataset-rules.ts",
+    "prebuild:pages": "npm run assets:atlas",
     "build:pages": "node scripts/build-pages.mjs"
   },
   "dependencies": {
