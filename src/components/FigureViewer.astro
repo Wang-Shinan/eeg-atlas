@@ -1,0 +1,26 @@
+<dialog class="figure-viewer" aria-label="放大查看图片" data-figure-viewer>
+  <div class="viewer-toolbar"><h2 data-viewer-title>图片</h2><div><button type="button" data-viewer-zoom aria-pressed="false">原始尺寸</button><a data-viewer-original target="_blank" rel="noopener">打开原图 ↗</a><button type="button" data-viewer-close aria-label="关闭图片">关闭 ×</button></div></div>
+  <div class="viewer-image-area"><img data-viewer-image alt="" /></div>
+</dialog>
+<script>
+const viewer = document.querySelector<HTMLDialogElement>('[data-figure-viewer]');
+const image = viewer?.querySelector<HTMLImageElement>('[data-viewer-image]');
+const heading = viewer?.querySelector<HTMLElement>('[data-viewer-title]');
+const original = viewer?.querySelector<HTMLAnchorElement>('[data-viewer-original]');
+const zoom = viewer?.querySelector<HTMLButtonElement>('[data-viewer-zoom]');
+let opener: HTMLElement | null = null;
+document.addEventListener('click', event => {
+  if (!(event.target instanceof Element)) return;
+  const link = event.target.closest<HTMLAnchorElement>('[data-figure-open]');
+  if (!link || !viewer || !image || !heading || !original || !zoom || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  event.preventDefault(); opener = link;
+  const title = link.dataset.figureTitle || link.querySelector('img')?.alt || '图片';
+  image.src = link.href; image.alt = link.querySelector('img')?.alt || title; heading.textContent = title; original.href = link.href;
+  viewer.classList.remove('is-zoomed'); zoom.setAttribute('aria-pressed', 'false'); zoom.textContent = '原始尺寸';
+  viewer.showModal(); document.body.classList.add('figure-open');
+});
+viewer?.querySelector('[data-viewer-close]')?.addEventListener('click', () => viewer.close());
+viewer?.addEventListener('click', event => { if (event.target === viewer) viewer.close(); });
+viewer?.addEventListener('close', () => { document.body.classList.remove('figure-open'); opener?.focus(); });
+zoom?.addEventListener('click', () => { const enabled = viewer?.classList.toggle('is-zoomed') ?? false; zoom.setAttribute('aria-pressed', String(enabled)); zoom.textContent = enabled ? '适应窗口' : '原始尺寸'; });
+</script>

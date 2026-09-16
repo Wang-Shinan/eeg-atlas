@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="内容章节" description="站内创建的 EEG Atlas 教学章节">
+  <article
+    class="min-w-0"
+    data-editor-page
+    data-editor-kind="custom"
+    data-editor-track="custom"
+    data-editor-group="自定义章节"
+    data-editor-order="999"
+    data-editor-slug=""
+  >
+    <header class="border-b border-rule pb-8">
+      <p class="font-sans text-xs tracking-[0.08em] text-muted">站内创建 · 自定义章节</p>
+      <h1 data-editor-key="title" class="mt-3 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">正在载入章节…</h1>
+      <p data-editor-key="subtitle" class="mt-2 font-serif text-lg italic text-muted"></p>
+      <p data-editor-key="summary" class="mt-5 max-w-2xl font-serif text-[1.0625rem] leading-relaxed"></p>
+    </header>
+    <div data-editor-custom-content class="prose prose-chapter mt-10 max-w-none">
+      <p>正在载入内容…</p>
+    </div>
+  </article>
+</BaseLayout>

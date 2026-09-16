@@ -40,13 +40,13 @@ jobs:
       # `build` deliberately does not run `npm run sync`; only content committed
       # to the repository is published.
       - name: Build
-        run: npm run build
+        run: npm run build:pages
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: dist-pages
 
   deploy:
     needs: build

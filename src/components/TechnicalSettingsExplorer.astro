@@ -1,0 +1,122 @@
+<figure class="not-prose my-10 overflow-hidden rounded-xl border border-rule bg-white shadow-sm">
+  <div data-technical-explorer class="p-5 sm:p-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div>
+        <p class="font-sans text-xs font-semibold tracking-[0.1em] text-accent">参数切换练习</p>
+        <p class="mt-1 font-serif text-lg font-medium">同一信号，显示设置不同，形态就不同</p>
+        <p class="mt-1 max-w-xl font-sans text-xs leading-relaxed text-muted">切换时间基准和高频滤波，观察尖锐成分、肌电与慢波如何被压缩或磨平。</p>
+      </div>
+      <div class="grid shrink-0 gap-3 font-sans text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="w-16 text-muted">时间基准</span>
+          <button type="button" data-setting="speed" data-value="15" aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted">15 mm/s</button>
+          <button type="button" data-setting="speed" data-value="30" aria-pressed="true" class="rounded border border-accent bg-accent px-3 py-1.5 text-white">30 mm/s</button>
+          <button type="button" data-setting="speed" data-value="60" aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted">60 mm/s</button>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="w-16 text-muted">高频滤波</span>
+          <button type="button" data-setting="hff" data-value="15" aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted">15 Hz</button>
+          <button type="button" data-setting="hff" data-value="70" aria-pressed="true" class="rounded border border-accent bg-accent px-3 py-1.5 text-white">70 Hz</button>
+          <button type="button" data-setting="hff" data-value="off" aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted">关闭</button>
+        </div>
+      </div>
+    </div>
+    <canvas data-settings-canvas width="960" height="330" class="mt-5 block w-full rounded-lg bg-[#fbfaf7]" role="img" aria-label="同一合成 EEG 信号在不同时间基准和高频滤波设置下的显示变化"></canvas>
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 font-sans text-xs text-muted">
+      <span data-settings-state aria-live="polite">30 mm/s · HFF 70 Hz</span>
+      <span>合成示意 / 设置改变显示，不改变原始事件</span>
+    </div>
+  </div>
+  <figcaption class="border-t border-rule px-5 py-3 font-sans text-xs leading-relaxed text-muted sm:px-6">练习目标：看到“更尖”或“更平”时，先检查时间基准与滤波，再解释生理意义。</figcaption>
+</figure>
+
+<script>
+  for (const root of document.querySelectorAll('[data-technical-explorer]')) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-settings-canvas]');
+    const state = root.querySelector<HTMLElement>('[data-settings-state]');
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-setting]');
+    if (!(canvas instanceof HTMLCanvasElement) || !(state instanceof HTMLElement)) continue;
+    const renderCanvas = canvas;
+    const renderState = state;
+    const drawingContext = renderCanvas.getContext('2d');
+    if (!drawingContext) continue;
+    const context: CanvasRenderingContext2D = drawingContext;
+    let speed = 30;
+    let hff = '70';
+
+    function drawTrace(baseline: number, row: number) {
+      const width = renderCanvas.width;
+      const plotLeft = 74;
+      const plotWidth = width - 96;
+      const compression = 30 / speed;
+      const highGain = hff === '15' ? 0.12 : hff === '70' ? 0.62 : 1;
+      context.strokeStyle = row < 2 ? '#8a5a2b' : '#2f6f68';
+      context.lineWidth = row === 1 ? 3 : 2.2;
+      context.beginPath();
+      for (let x = 0; x <= plotWidth; x += 2) {
+        const t = (x / plotWidth) * 10 * compression;
+        const slow = Math.sin(t * Math.PI * 2 * 1.2 + row * 0.35) * 10;
+        const fast = Math.sin(t * Math.PI * 2 * 22 + row) * 8 * highGain;
+        const eventCenter = 4.9;
+        const distance = Math.abs(t - eventCenter);
+        const sharp = distance < 0.13 ? (1 - distance / 0.13) * (row === 1 ? 52 : 25) : 0;
+        const afterSlow = t > eventCenter && t < eventCenter + 0.8 ? Math.sin(((t - eventCenter) / 0.8) * Math.PI) * 22 : 0;
+        const y = baseline - slow - fast + sharp - afterSlow;
+        if (x === 0) context.moveTo(plotLeft + x, y);
+        else context.lineTo(plotLeft + x, y);
+      }
+      context.stroke();
+    }
+
+    function draw() {
+      const width = renderCanvas.width;
+      const height = renderCanvas.height;
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = '#fbfaf7';
+      context.fillRect(0, 0, width, height);
+      context.strokeStyle = '#e2ded4';
+      context.lineWidth = 1;
+      for (let x = 74; x <= width; x += 86) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, height);
+        context.stroke();
+      }
+      const names = ['F7–T7', 'T7–P7', 'P7–O1', 'ECG'];
+      context.font = '600 13px system-ui, sans-serif';
+      for (let row = 0; row < names.length; row += 1) {
+        const baseline = 58 + row * 72;
+        context.fillStyle = '#6b6862';
+        context.fillText(names[row], 14, baseline + 5);
+        context.strokeStyle = '#e2ded4';
+        context.beginPath();
+        context.moveTo(74, baseline);
+        context.lineTo(width - 18, baseline);
+        context.stroke();
+        drawTrace(baseline, row);
+      }
+    }
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        const kind = button.dataset.setting;
+        const value = button.dataset.value ?? '';
+        if (kind === 'speed') speed = Number(value);
+        if (kind === 'hff') hff = value;
+        for (const other of buttons) {
+          if (other.dataset.setting !== kind) continue;
+          const active = other === button;
+          other.setAttribute('aria-pressed', String(active));
+          other.classList.toggle('border-accent', active);
+          other.classList.toggle('bg-accent', active);
+          other.classList.toggle('text-white', active);
+          other.classList.toggle('border-rule', !active);
+          other.classList.toggle('text-muted', !active);
+        }
+        renderState.textContent = `${speed} mm/s · HFF ${hff === 'off' ? '关闭' : `${hff} Hz`}`;
+        draw();
+      });
+    }
+    draw();
+  }
+</script>

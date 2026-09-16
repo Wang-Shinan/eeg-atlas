@@ -328,6 +328,12 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Never replace curated chapters with an imported vault snapshot.
+  const existing = await readdir(outputDir).catch(() => [] as string[]);
+  for (const file of existing.filter(file => /\.mdx?$/.test(file))) {
+    const { data } = matter(await readFile(join(outputDir, file), 'utf8'));
+    if (data.generated !== true) throw new Error(`Refusing to overwrite curated chapter: ${file}. Import into a separate directory.`);
+  }
   await rm(outputDir, { recursive: true, force: true });
   await mkdir(outputDir, { recursive: true });
 

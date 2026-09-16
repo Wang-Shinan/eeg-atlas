@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { figures } from '../data/figures';
+import { withBase } from '../lib/urls';
+---
+<BaseLayout title="图源与参考" description="EEG Atlas 教学原图的作者、出处、使用说明与对应章节。">
+  <header class="source-intro"><span class="eyebrow">SOURCES & ATTRIBUTION</span><h1>图源与参考</h1><p>从每一张图，回到原始资料。这里记录教学原图的作者、出处与使用说明，中文读图提示见对应章节。</p></header>
+  <div class="source-list">
+    {figures.map(figure => <article class="source-entry" id={figure.id}><a href={withBase(figure.src)} target="_blank" rel="noopener" aria-label={`查看原图：${figure.title}`}><img src={withBase(figure.src)} alt={figure.alt} loading="lazy" width={150} height={120}/></a><div><span class="eyebrow">{figure.label} / {figure.kind}</span><h2>{figure.title}</h2><p>{figure.author} · {figure.sourceLabel}</p><p>{figure.citation}</p><p><a href={figure.licenseUrl} target="_blank" rel="noreferrer">{figure.license}</a> · 原图未改动；中文说明置于图外。</p><div class="source-actions"><a href={figure.sourceUrl} target="_blank" rel="noreferrer">原始出处 ↗</a><a href={withBase(`/chapters/${figure.chapter}/#figure-${figure.id}`)}>在章节中阅读</a></div></div></article>)}
+  </div>
+  <section class="source-note"><h2>如何使用这些图</h2><p>先阅读图注中的年龄、状态与记录条件，再对照正文观察。原图中的导联、时间与幅度标尺保持原样；小屏幕上可放大查看。</p><p>带有「合成示意」或「图示依据」说明的原有图解用于解释概念，所列资料是解释依据。上方清单单独列出本次引入的原图及其直接出处。</p><p>图片的使用条件以各自来源为准。例如标为 CC BY-NC-SA 的图片要求署名、非商业使用，并对改编作品采用相同许可。</p></section>
+</BaseLayout>

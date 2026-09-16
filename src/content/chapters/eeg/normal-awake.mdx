@@ -7,10 +7,13 @@ track: "eeg"
 group: "正常 EEG"
 ---
 
+import AtlasFigure from '../../../components/AtlasFigure.astro';
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 
 异常是相对「正常基线」而言的。先建立清醒正常背景的阅读顺序，再谈病理。
+
+<AtlasFigure id="posterior-alpha" />
 
 ## 后部主导节律
 
@@ -23,6 +26,8 @@ import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 ## 反应性
 
 对睁眼、声音、触觉的背景改变称为反应性。有反应性通常提示皮层联系尚存；完全无反应（在充分刺激下）见于严重脑病等，但须排除药物与技术因素。
+
+<AtlasFigure id="alpha-reactivity" />
 
 <TestYourself answer="睁眼后后部节律衰减">
 <Fragment slot="question">

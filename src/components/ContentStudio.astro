@@ -1,0 +1,406 @@
+<div data-content-studio-controls class="fixed bottom-5 right-5 z-50 hidden flex-col items-end gap-2 font-sans">
+  <button type="button" data-studio-new class="rounded-full border border-rule bg-white px-4 py-2 text-xs font-semibold text-ink shadow-lg hover:border-accent/60">
+    新建章节
+  </button>
+  <button type="button" data-studio-edit class="hidden rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white shadow-lg hover:brightness-95">
+    编辑本页
+  </button>
+</div>
+
+<div data-content-studio-toolbar class="fixed inset-x-0 top-[3.45rem] z-40 hidden border-b border-rule bg-white/95 px-4 py-2 shadow-sm backdrop-blur">
+  <div class="mx-auto flex max-w-[90rem] flex-wrap items-center gap-2 font-sans text-xs">
+    <span class="mr-2 font-semibold text-accent">内容编辑</span>
+    <button type="button" data-format="bold" class="studio-tool"><strong>B</strong></button>
+    <button type="button" data-format="italic" class="studio-tool"><em>I</em></button>
+    <button type="button" data-format="h2" class="studio-tool">小标题</button>
+    <button type="button" data-format="link" class="studio-tool">链接</button>
+    <button type="button" data-format="image" class="studio-tool">增加图片</button>
+    <input data-studio-file type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" class="sr-only" />
+    <span data-studio-status class="ml-auto text-muted" aria-live="polite">修改后点击保存</span>
+    <button type="button" data-studio-cancel class="rounded border border-rule px-3 py-1.5 text-muted hover:text-ink">取消</button>
+    <button type="button" data-studio-save class="rounded bg-accent px-3 py-1.5 font-semibold text-white">保存</button>
+  </div>
+</div>
+
+<dialog data-studio-dialog class="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-xl border border-rule bg-paper p-0 text-ink shadow-2xl backdrop:bg-ink/30">
+  <form data-studio-form class="p-6 font-sans">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold tracking-[0.1em] text-accent">内容工作台</p>
+        <h2 class="mt-1 font-serif text-2xl font-semibold">创建新章节</h2>
+      </div>
+      <button type="button" data-studio-close class="text-sm text-muted hover:text-ink">关闭</button>
+    </div>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <label class="studio-field sm:col-span-2">章节标题<input name="title" required maxlength="200" /></label>
+      <label class="studio-field">英文 slug<input name="slug" pattern="[a-z0-9-]+" placeholder="new-chapter" /></label>
+      <label class="studio-field">所属专题
+        <select name="track">
+          <option value="eeg">脑电判读</option>
+          <option value="foundation-models">EEG 基础模型</option>
+          <option value="dataset-rules">Dataset Rules</option>
+          <option value="custom">内部专题</option>
+        </select>
+      </label>
+      <label class="studio-field">章节分组<input name="group" value="自定义章节" maxlength="120" /></label>
+      <label class="studio-field">排序序号<input name="order" type="number" value="900" /></label>
+      <label class="studio-field sm:col-span-2">副标题<input name="subtitle" maxlength="300" /></label>
+      <label class="studio-field sm:col-span-2">摘要<textarea name="summary" rows="3" maxlength="1200"></textarea></label>
+    </div>
+    <p data-studio-form-error class="mt-4 hidden rounded bg-red-50 px-3 py-2 text-xs text-red-700" aria-live="polite"></p>
+    <div class="mt-6 flex justify-end gap-2">
+      <button type="button" data-studio-close class="rounded border border-rule px-4 py-2 text-xs text-muted">取消</button>
+      <button type="submit" class="rounded bg-accent px-4 py-2 text-xs font-semibold text-white">创建并编辑</button>
+    </div>
+  </form>
+</dialog>
+
+<script is:inline>
+  (() => {
+    const page = document.querySelector('[data-editor-page]');
+    const controls = document.querySelector('[data-content-studio-controls]');
+    const editButton = document.querySelector('[data-studio-edit]');
+    const newButton = document.querySelector('[data-studio-new]');
+    const toolbar = document.querySelector('[data-content-studio-toolbar]');
+    const saveButton = document.querySelector('[data-studio-save]');
+    const cancelButton = document.querySelector('[data-studio-cancel]');
+    const status = document.querySelector('[data-studio-status]');
+    const fileInput = document.querySelector('[data-studio-file]');
+    const dialog = document.querySelector('[data-studio-dialog]');
+    const form = document.querySelector('[data-studio-form]');
+    const formError = document.querySelector('[data-studio-form-error]');
+    if (!controls || !newButton || !toolbar || !dialog || !form) return;
+
+    let chapterState = null;
+    let editing = false;
+    let activeTarget = null;
+
+    const normalizePath = (value) => {
+      let path = String(value || '/').replace(/\/{2,}/g, '/');
+      if (path !== '/' && !path.endsWith('/')) path += '/';
+      return path;
+    };
+
+    const escapeSelectorValue = (value) => String(value).replace(/["\\]/g, '\\$&');
+
+    function editableTargets() {
+      if (!page) return [];
+      const explicit = Array.from(page.querySelectorAll('[data-editor-key]'));
+      const prose = page.querySelector('.prose-chapter');
+      if (page.dataset.editorKind !== 'custom' && prose) {
+        let index = 0;
+        for (const element of prose.querySelectorAll('h2, h3, p, li, td, th, figcaption')) {
+          if (element.closest('.not-prose') || element.closest('[data-editor-inserted]')) continue;
+          if (!element.dataset.editorKey) element.dataset.editorKey = `body-${index}`;
+          index += 1;
+          if (!explicit.includes(element)) explicit.push(element);
+        }
+      }
+      return explicit;
+    }
+
+    function setActiveTarget(element) {
+      if (activeTarget) activeTarget.classList.remove('studio-active-target');
+      activeTarget = element;
+      if (activeTarget) activeTarget.classList.add('studio-active-target');
+    }
+
+    function prepareTargets() {
+      for (const element of editableTargets()) {
+        element.addEventListener('focus', () => setActiveTarget(element));
+        element.addEventListener('click', () => editing && setActiveTarget(element));
+      }
+    }
+
+    function applyChapter(chapter) {
+      if (!page || !chapter) return;
+      chapterState = chapter;
+      page.dataset.editorKind = chapter.sourceKind || page.dataset.editorKind || 'static';
+      page.dataset.editorTrack = chapter.track || page.dataset.editorTrack || 'eeg';
+      page.dataset.editorGroup = chapter.group || page.dataset.editorGroup || '自定义章节';
+      page.dataset.editorOrder = String(chapter.order ?? page.dataset.editorOrder ?? 999);
+      page.dataset.editorSlug = chapter.slug || page.dataset.editorSlug || '';
+      const title = page.querySelector('[data-editor-key="title"]');
+      const subtitle = page.querySelector('[data-editor-key="subtitle"]');
+      const summary = page.querySelector('[data-editor-key="summary"]');
+      if (chapter.sourceKind === 'custom') {
+        if (title) title.textContent = chapter.title;
+        if (subtitle) subtitle.textContent = chapter.subtitle || '';
+        if (summary) summary.textContent = chapter.summary || '';
+        const content = page.querySelector('[data-editor-custom-content]');
+        if (content) content.innerHTML = chapter.contentHtml || '<h2>新章节</h2><p>从这里开始撰写内容。</p>';
+      } else if (chapter.patches) {
+        for (const [key, html] of Object.entries(chapter.patches.fields || {})) {
+          const target = page.querySelector(`[data-editor-key="${escapeSelectorValue(key)}"]`);
+          if (target) target.innerHTML = html;
+        }
+        const prose = page.querySelector('.prose-chapter');
+        for (const insert of chapter.patches.inserts || []) {
+          if (!prose || page.querySelector(`[data-editor-inserted="${escapeSelectorValue(insert.id)}"]`)) continue;
+          const template = document.createElement('template');
+          template.innerHTML = insert.html;
+          const node = template.content.firstElementChild;
+          if (!node) continue;
+          node.dataset.editorInserted = insert.id;
+          node.dataset.editorAfter = insert.afterKey || '';
+          const anchor = insert.afterKey ? page.querySelector(`[data-editor-key="${escapeSelectorValue(insert.afterKey)}"]`) : null;
+          if (anchor) anchor.insertAdjacentElement('afterend', node);
+          else prose.append(node);
+        }
+      }
+      if (chapter.title) document.title = `${chapter.title} · EEG Atlas`;
+    }
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || '请求失败。');
+      return data;
+    }
+
+    function renderChapterNavigation(chapters) {
+      const links = Array.from(document.querySelectorAll('#site-sidebar a[href]'));
+      for (const chapter of chapters) {
+        for (const link of links) {
+          if (normalizePath(new URL(link.href).pathname) !== normalizePath(chapter.path)) continue;
+          const labels = link.querySelectorAll('span');
+          const label = labels.length ? labels[labels.length - 1] : link;
+          label.textContent = chapter.title;
+        }
+      }
+      const container = document.querySelector('[data-editor-custom-nav]');
+      if (!container) return;
+      const custom = chapters.filter((chapter) => chapter.sourceKind === 'custom');
+      container.replaceChildren();
+      if (!custom.length) return;
+      const heading = document.createElement('p');
+      heading.className = 'px-2 text-xs font-medium text-muted/90';
+      heading.textContent = '站内创建';
+      const list = document.createElement('ul');
+      list.className = 'mt-1 space-y-0.5';
+      for (const chapter of custom) {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = chapter.path;
+        link.className = 'flex items-baseline gap-2 rounded px-2 py-1.5 leading-snug text-muted transition-colors hover:bg-accent-soft/50 hover:text-ink';
+        link.innerHTML = `<span class="w-5 shrink-0 text-xs tabular-nums text-muted/80">+</span><span class="min-w-0 text-[0.8125rem]"></span>`;
+        link.lastElementChild.textContent = chapter.title;
+        item.append(link);
+        list.append(item);
+      }
+      container.append(heading, list);
+    }
+
+    async function initialize() {
+      prepareTargets();
+      const tasks = [fetchJson('/api/editor/me'), fetchJson('/api/editor/chapters')];
+      if (page) tasks.push(fetchJson(`/api/editor/state?path=${encodeURIComponent(normalizePath(location.pathname))}`));
+      try {
+        const [me, chapterList, state] = await Promise.all(tasks);
+        renderChapterNavigation(chapterList.chapters || []);
+        if (state?.chapter) applyChapter(state.chapter);
+        if (me.canEdit) {
+          controls.classList.remove('hidden');
+          controls.classList.add('flex');
+          if (page && editButton) editButton.classList.remove('hidden');
+        }
+      } catch (error) {
+        console.warn('Content Studio unavailable:', error);
+      }
+    }
+
+    function beginEditing() {
+      if (!page) return;
+      editing = true;
+      document.body.classList.add('studio-editing');
+      toolbar.classList.remove('hidden');
+      controls.classList.add('hidden');
+      if (page.dataset.editorKind === 'custom') {
+        const customContent = page.querySelector('[data-editor-custom-content]');
+        if (customContent) customContent.contentEditable = 'true';
+      }
+      for (const element of editableTargets()) element.contentEditable = 'true';
+      status.textContent = '修改后点击保存';
+      const first = page.querySelector('[data-editor-key="title"]');
+      if (first) first.focus();
+    }
+
+    function cleanInsertedHtml(element) {
+      const clone = element.cloneNode(true);
+      clone.removeAttribute('contenteditable');
+      clone.classList.remove('studio-active-target');
+      for (const child of clone.querySelectorAll('[contenteditable]')) child.removeAttribute('contenteditable');
+      return clone.outerHTML;
+    }
+
+    async function savePage() {
+      if (!page) return;
+      saveButton.disabled = true;
+      status.textContent = '正在保存…';
+      const title = page.querySelector('[data-editor-key="title"]')?.textContent?.trim() || '未命名章节';
+      const subtitle = page.querySelector('[data-editor-key="subtitle"]')?.textContent?.trim() || '';
+      const summary = page.querySelector('[data-editor-key="summary"]')?.textContent?.trim() || '';
+      const sourceKind = page.dataset.editorKind === 'custom' ? 'custom' : 'static';
+      const payload = {
+        path: normalizePath(location.pathname),
+        slug: page.dataset.editorSlug || location.pathname.split('/').filter(Boolean).at(-1),
+        sourceKind,
+        track: page.dataset.editorTrack || 'eeg',
+        group: page.dataset.editorGroup || '自定义章节',
+        order: Number(page.dataset.editorOrder || 999),
+        title,
+        subtitle,
+        summary,
+        expectedUpdatedAt: chapterState?.updatedAt || null,
+      };
+      if (sourceKind === 'custom') {
+        payload.contentHtml = page.querySelector('[data-editor-custom-content]')?.innerHTML || '';
+      } else {
+        const fields = {};
+        for (const element of editableTargets()) fields[element.dataset.editorKey] = element.innerHTML;
+        const inserts = Array.from(page.querySelectorAll('[data-editor-inserted]')).map((element) => ({
+          id: element.dataset.editorInserted,
+          afterKey: element.dataset.editorAfter || '',
+          html: cleanInsertedHtml(element),
+        }));
+        payload.patches = { fields, inserts };
+      }
+      try {
+        const result = await fetchJson('/api/editor/pages', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        chapterState = result.chapter;
+        status.textContent = '已保存';
+        setTimeout(() => location.reload(), 450);
+      } catch (error) {
+        status.textContent = error.message;
+        saveButton.disabled = false;
+      }
+    }
+
+    function wrapSelection(tagName, attributes = {}) {
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount || selection.isCollapsed) return;
+      const range = selection.getRangeAt(0);
+      const wrapper = document.createElement(tagName);
+      for (const [name, value] of Object.entries(attributes)) wrapper.setAttribute(name, value);
+      try {
+        range.surroundContents(wrapper);
+      } catch {
+        wrapper.append(range.extractContents());
+        range.insertNode(wrapper);
+      }
+      const nextRange = document.createRange();
+      nextRange.selectNodeContents(wrapper);
+      selection.removeAllRanges();
+      selection.addRange(nextRange);
+    }
+
+    function runFormat(command) {
+      if (command === 'image') {
+        fileInput.click();
+        return;
+      }
+      if (command === 'link') {
+        const url = prompt('输入链接地址');
+        if (url) {
+          const resolved = new URL(url, location.origin);
+          if (['http:', 'https:', 'mailto:'].includes(resolved.protocol)) wrapSelection('a', { href: url });
+          else status.textContent = '链接协议不受支持';
+        }
+        return;
+      }
+      if (command === 'h2' && activeTarget) {
+        const heading = document.createElement('h2');
+        heading.innerHTML = activeTarget.innerHTML;
+        heading.dataset.editorKey = activeTarget.dataset.editorKey || '';
+        heading.contentEditable = 'true';
+        activeTarget.replaceWith(heading);
+        setActiveTarget(heading);
+      } else if (command === 'bold') wrapSelection('strong');
+      else if (command === 'italic') wrapSelection('em');
+      activeTarget?.focus();
+    }
+
+    async function uploadImage(file) {
+      if (!file || !page) return;
+      status.textContent = '正在上传图片…';
+      const body = new FormData();
+      body.append('file', file);
+      try {
+        const result = await fetchJson('/api/editor/media', { method: 'POST', body });
+        const figure = document.createElement('figure');
+        figure.dataset.editorInserted = crypto.randomUUID();
+        figure.dataset.editorAfter = activeTarget?.dataset.editorKey || '';
+        figure.className = 'my-10';
+        const image = document.createElement('img');
+        image.src = result.media.url;
+        image.alt = prompt('图片替代文字（用于无障碍阅读）', file.name) || file.name;
+        image.className = 'w-full rounded border border-rule bg-white';
+        const caption = document.createElement('figcaption');
+        caption.className = 'mt-2 font-sans text-xs leading-relaxed text-muted';
+        caption.textContent = prompt('图片说明', '点击这里继续修改图片说明') || '';
+        caption.contentEditable = 'true';
+        figure.append(image, caption);
+        if (activeTarget) activeTarget.insertAdjacentElement('afterend', figure);
+        else page.querySelector('.prose-chapter')?.append(figure);
+        setActiveTarget(caption);
+        status.textContent = '图片已插入，保存后生效';
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        fileInput.value = '';
+      }
+    }
+
+    async function createChapter(event) {
+      event.preventDefault();
+      formError.classList.add('hidden');
+      const data = new FormData(form);
+      const title = String(data.get('title') || '').trim();
+      let slug = String(data.get('slug') || '').trim().toLowerCase();
+      if (!slug) slug = title.normalize('NFKD').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+      if (!slug) slug = `chapter-${Date.now().toString(36)}`;
+      const track = String(data.get('track') || 'custom');
+      const payload = {
+        path: `/chapters/${track}/${slug}/`,
+        slug,
+        sourceKind: 'custom',
+        track,
+        group: String(data.get('group') || '自定义章节'),
+        order: Number(data.get('order') || 900),
+        title,
+        subtitle: String(data.get('subtitle') || ''),
+        summary: String(data.get('summary') || ''),
+        contentHtml: '<h2>新章节</h2><p>从这里开始撰写内容。你可以使用右上方的编辑工具添加文字、链接和图片。</p>',
+      };
+      try {
+        const result = await fetchJson('/api/editor/pages', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        location.href = result.chapter.path;
+      } catch (error) {
+        formError.textContent = error.message;
+        formError.classList.remove('hidden');
+      }
+    }
+
+    editButton?.addEventListener('click', beginEditing);
+    newButton.addEventListener('click', () => dialog.showModal());
+    for (const close of document.querySelectorAll('[data-studio-close]')) close.addEventListener('click', () => dialog.close());
+    saveButton?.addEventListener('click', savePage);
+    cancelButton?.addEventListener('click', () => location.reload());
+    fileInput?.addEventListener('change', () => uploadImage(fileInput.files?.[0]));
+    form.addEventListener('submit', createChapter);
+    for (const button of document.querySelectorAll('[data-format]')) {
+      button.addEventListener('mousedown', (event) => event.preventDefault());
+      button.addEventListener('click', () => runFormat(button.dataset.format));
+    }
+
+    initialize();
+  })();
+</script>

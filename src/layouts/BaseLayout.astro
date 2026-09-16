@@ -1,102 +1,84 @@
 ---
 import '../styles/global.css';
-import { site } from '../site.config';
+import { site, tracks } from '../site.config';
 import { withBase } from '../lib/urls';
 import SidebarNav from '../components/SidebarNav.astro';
-
-interface Props {
-  title?: string;
-  description?: string;
-}
-
+import ContentStudio from '../components/ContentStudio.astro';
+import FigureViewer from '../components/FigureViewer.astro';
+interface Props { title?: string; description?: string; }
 const { title, description = site.description } = Astro.props;
-const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — ${site.tagline}`;
+const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — 脑电图学习图谱`;
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isHome = currentPath === withBase('/').replace(/\/+$/, '') || currentPath === '/';
 const hasRail = Astro.slots.has('rail');
+const editorEnabled = import.meta.env.PUBLIC_CONTENT_EDITOR !== 'false';
+const activeTrack = tracks.find(t => currentPath.includes(`/chapters/${t.id}/`))?.id;
 ---
-
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{pageTitle}</title>
-    <meta name="description" content={description} />
-    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
-  </head>
-  <body class="min-h-screen">
-    <input id="nav-toggle" type="checkbox" class="sr-only" />
-
-    <header class="sticky top-0 z-30 border-b border-rule bg-paper/90 backdrop-blur">
-      <div class="mx-auto flex max-w-[90rem] items-center gap-3 px-4 py-3 sm:px-6">
-        <label
-          for="nav-toggle"
-          class="inline-flex cursor-pointer items-center justify-center rounded border border-rule px-2.5 py-1.5 font-sans text-xs text-ink lg:hidden"
-        >
-          目录
-        </label>
-        <a href={withBase('/')} class="font-serif text-lg font-semibold tracking-tight text-ink">
-          {site.title}
-        </a>
-        <span class="hidden font-sans text-xs text-muted sm:inline">{site.tagline}</span>
-      </div>
-    </header>
-
-    <label
-      id="nav-overlay"
-      for="nav-toggle"
-      class="fixed inset-0 z-30 bg-ink/25 lg:hidden"
-      aria-hidden="true"
-    ></label>
-
-    <div
-      class:list={[
-        'mx-auto grid max-w-[90rem] lg:grid-cols-[16rem_minmax(0,1fr)]',
-        hasRail && 'xl:grid-cols-[16rem_minmax(0,1fr)_13rem]',
-      ]}
-    >
-      <aside
-        id="site-sidebar"
-        class="fixed inset-y-0 left-0 z-40 flex w-[min(20rem,88vw)] flex-col border-r border-rule bg-paper transition-transform duration-200 lg:static lg:z-auto lg:w-auto lg:bg-transparent"
-      >
-        <div class="flex items-center justify-between border-b border-rule px-4 py-3 lg:hidden">
-          <span class="font-sans text-xs font-medium text-muted">章节导航</span>
-          <label for="nav-toggle" class="cursor-pointer font-sans text-xs text-accent">关闭</label>
-        </div>
-        <div class="flex-1 overflow-y-auto px-3 py-5 lg:sticky lg:top-14 lg:max-h-[calc(100vh-3.5rem)] lg:px-4 lg:py-8">
-          <SidebarNav currentPath={currentPath} />
-        </div>
-      </aside>
-
-      <div class="min-w-0 px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
-        <slot />
-      </div>
-
-      {
-        hasRail && (
-          <aside class="hidden border-l border-rule xl:block">
-            <div class="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto px-4 py-8">
-              <slot name="rail" />
-            </div>
-          </aside>
-        )
-      }
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{pageTitle}</title><meta name="description" content={description} />
+  <meta name="theme-color" content="#142e35" />
+  <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+</head>
+<body class:list={[isHome && 'home-page']}>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  {editorEnabled && <ContentStudio />}
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="site-brand" href={withBase('/')}><span class="brand-letter" aria-hidden="true">e.</span><span>EEG Atlas<small>脑电图学习图谱</small></span></a>
+      <nav class="top-nav" aria-label="专题导航">
+        {tracks.map(t => <a href={withBase(`/#${t.id}`)} aria-current={(isHome && t.id === 'eeg') || activeTrack === t.id ? 'page' : undefined}>{t.id === 'eeg' ? '脑电判读' : t.id === 'foundation-models' ? '基础模型' : '数据规范'}</a>)}
+      </nav>
+      <a class="header-reference" href={withBase('/sources/')}>图源与参考</a>
+      {!isHome && <button class="menu-button" type="button" aria-controls="site-sidebar" aria-expanded="false" data-nav-toggle>章节目录</button>}
     </div>
-
-    <footer class="border-t border-rule">
-      <div class="mx-auto max-w-[90rem] px-4 py-10 font-sans text-xs leading-relaxed text-muted sm:px-6 lg:pl-[calc(16rem+1.5rem)]">
-        <p>{site.title} — {site.tagline}</p>
-        <p class="mt-2">
-          原创中文教学站点：脑电图判读、EEG 基础模型，以及
-          <a
-            class="underline decoration-rule hover:text-ink"
-            href="https://github.com/Omni-Intel/dataset-rules"
-          >
-            Dataset Rules
-          </a>
-          数据规范。
-        </p>
-      </div>
-    </footer>
-  </body>
+    <div class="reading-progress" aria-hidden="true"><span data-reading-progress></span></div>
+  </header>
+  <div class:list={['site-frame', isHome && 'site-frame-home', hasRail && 'with-rail']}>
+    {!isHome && <>
+      <button class="nav-overlay" aria-label="关闭章节目录" data-nav-close tabindex="-1"></button>
+      <aside id="site-sidebar" class="site-sidebar">
+        <div class="mobile-sidebar-header"><strong>章节目录</strong><button type="button" data-nav-close>关闭</button></div>
+        <SidebarNav currentPath={currentPath} />
+      </aside>
+    </>}
+    <main id="main-content" class="main-content" tabindex="-1"><slot /></main>
+    {hasRail && <aside class="page-rail"><slot name="rail" /></aside>}
+  </div>
+  <FigureViewer />
+  <footer class="site-footer"><a href={withBase('/')}>EEG Atlas <span>脑电图学习图谱</span></a><p>从基础概念，到每一张脑电图。</p><a href={withBase('/sources/')}>图片出处与参考资料</a></footer>
+  <script>
+    const header = document.querySelector<HTMLElement>('.site-header');
+    if (header) new ResizeObserver(() => document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`)).observe(header);
+    const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+    const sidebar = document.querySelector<HTMLElement>('#site-sidebar');
+    const closeNav = () => { document.body.classList.remove('nav-open'); toggle?.setAttribute('aria-expanded', 'false'); };
+    toggle?.addEventListener('click', () => {
+      const open = !document.body.classList.contains('nav-open');
+      document.body.classList.toggle('nav-open', open); toggle.setAttribute('aria-expanded', String(open));
+      if (open) sidebar?.querySelector<HTMLButtonElement>('button')?.focus();
+    });
+    document.querySelectorAll('[data-nav-close]').forEach(el => el.addEventListener('click', () => { closeNav(); toggle?.focus(); }));
+    sidebar?.querySelectorAll('a').forEach(el => el.addEventListener('click', closeNav));
+    document.addEventListener('keydown', event => {
+      if (!document.body.classList.contains('nav-open')) return;
+      if (event.key === 'Escape') { closeNav(); toggle?.focus(); }
+      if (event.key === 'Tab' && sidebar) {
+        const focusable = Array.from(sidebar.querySelectorAll<HTMLElement>('a[href], button')).filter(el => el.getClientRects().length);
+        const first = focusable[0], last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    });
+    document.querySelectorAll('.prose-chapter table').forEach(table => {
+      if (table.parentElement?.classList.contains('table-scroll')) return;
+      const wrapper = document.createElement('div'); wrapper.className = 'table-scroll'; wrapper.tabIndex = 0; wrapper.setAttribute('role', 'region'); wrapper.setAttribute('aria-label', '资料表，可横向滚动'); table.before(wrapper); wrapper.append(table);
+    });
+    const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
+    function updateProgress() { const distance = document.documentElement.scrollHeight - innerHeight; if (progress) progress.style.transform = `scaleX(${distance > 0 ? scrollY / distance : 0})`; }
+    addEventListener('scroll', updateProgress, {passive: true}); updateProgress();
+  </script>
+</body>
 </html>

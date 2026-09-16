@@ -9,8 +9,20 @@ group: "异常 EEG"
 
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import FigureImage from '../../../components/FigureImage.astro';
+import SourceNote from '../../../components/SourceNote.astro';
+import SeizureEvolution from '../../../components/SeizureEvolution.astro';
 
 发作的 EEG 核心是**演进**：频率、波幅、分布随时间变化，常伴临床同步改变。没有演进的节律性活动要警惕周期性放电、伪迹或正常变异。
+
+<FigureImage
+  src="/figures/seizure-evolution.png"
+  alt="电图发作从局部起始、演进、扩散到发作后衰减的四阶段示意图"
+  caption="四阶段是教学抽象：真实发作可以不按此顺序、不同导联也可能不同步。这里强调的是描述框架，不是单凭图形下诊断。"
+/>
+<SourceNote sources={[{ label: 'ACNS · Standardized Critical Care EEG Terminology 2021', href: 'https://www.acns.org/UserFiles/file/ACNSStandardizedCriticalCareEEGTerminology_rev2021.pdf' }]} />
+
+<details class="not-prose concept-demo"><summary>原理演示：发作演变（合成示意）</summary><SeizureEvolution /></details>
 
 ## 什么叫电图发作
 

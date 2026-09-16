@@ -1,0 +1,107 @@
+<figure class="not-prose my-10 overflow-hidden rounded-xl border border-rule bg-white shadow-sm">
+  <div data-waveform-explorer class="p-5 sm:p-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="font-sans text-xs font-semibold tracking-[0.1em] text-accent">互动波形</p>
+        <p class="mt-1 font-serif text-lg font-medium">闭眼与睁眼：观察 alpha 的反应性</p>
+        <p class="mt-1 max-w-xl font-sans text-xs leading-relaxed text-muted">这是合成示意，不是患者记录。点击状态按钮，再用暂停键仔细比较背景与后部节律。</p>
+      </div>
+      <div class="flex shrink-0 flex-wrap gap-2 font-sans text-xs">
+        <button type="button" data-wave-eyes="closed" aria-pressed="true" class="rounded border border-accent bg-accent px-3 py-1.5 text-white">闭眼</button>
+        <button type="button" data-wave-eyes="open" aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted hover:border-accent/50">睁眼</button>
+        <button type="button" data-wave-toggle aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted hover:border-accent/50">暂停</button>
+      </div>
+    </div>
+    <canvas data-wave-canvas width="960" height="300" class="mt-5 block w-full rounded-lg bg-[#fbfaf7]" role="img" aria-label="四路合成 EEG 波形，展示闭眼和睁眼时的 alpha 反应性"></canvas>
+    <div class="mt-3 flex items-center justify-between font-sans text-xs text-muted">
+      <span data-wave-state>闭眼 · 后部 alpha 较明显</span>
+      <span>时间 →</span>
+    </div>
+  </div>
+  <figcaption class="border-t border-rule px-5 py-3 font-sans text-xs leading-relaxed text-muted sm:px-6">交互图把“频率、振幅、分布、反应性”放在同一屏里；真实判读仍需结合导联、滤波、状态和临床背景。</figcaption>
+</figure>
+
+<script>
+  for (const root of document.querySelectorAll('[data-waveform-explorer]')) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-wave-canvas]');
+    const state = root.querySelector<HTMLElement>('[data-wave-state]');
+    const toggle = root.querySelector<HTMLButtonElement>('[data-wave-toggle]');
+    const eyesButtons = root.querySelectorAll<HTMLButtonElement>('[data-wave-eyes]');
+    if (!(canvas instanceof HTMLCanvasElement) || !(state instanceof HTMLElement) || !(toggle instanceof HTMLButtonElement)) continue;
+    const renderCanvas = canvas;
+    const renderState = state;
+
+    const drawingContext = renderCanvas.getContext('2d');
+    if (!drawingContext) continue;
+    const context: CanvasRenderingContext2D = drawingContext;
+    let phase = 0;
+    let playing = true;
+    let eyes = 'closed';
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function draw() {
+      const width = renderCanvas.width;
+      const height = renderCanvas.height;
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = '#fbfaf7';
+      context.fillRect(0, 0, width, height);
+      context.strokeStyle = '#e2ded4';
+      context.lineWidth = 1;
+      for (let x = 0; x <= width; x += 96) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, height);
+        context.stroke();
+      }
+      const traces: Array<[string, number, number, string]> = [
+        ['O1', 58, 9, '#8a5a2b'],
+        ['O2', 112, 9, '#8a5a2b'],
+        ['C3', 166, 5, '#2f6f68'],
+        ['C4', 220, 5, '#2f6f68'],
+      ];
+      context.font = '600 14px system-ui, sans-serif';
+      for (const [name, baseline, frequency, color] of traces) {
+        context.fillStyle = '#6b6862';
+        context.fillText(name, 18, baseline + 5);
+        context.strokeStyle = '#e2ded4';
+        context.beginPath();
+        context.moveTo(58, baseline);
+        context.lineTo(width - 18, baseline);
+        context.stroke();
+        const amplitude = name.startsWith('O') && eyes === 'open' ? 8 : name.startsWith('O') ? 25 : 13;
+        context.strokeStyle = color;
+        context.lineWidth = 3;
+        context.beginPath();
+        for (let x = 0; x <= width - 76; x += 2) {
+          const y = baseline - Math.sin((x / width) * Math.PI * 2 * frequency + phase) * amplitude;
+          if (x === 0) context.moveTo(x + 62, y);
+          else context.lineTo(x + 62, y);
+        }
+        context.stroke();
+      }
+    }
+
+    function frame() {
+      if (playing) phase += 0.055;
+      draw();
+      if (!reducedMotion) requestAnimationFrame(frame);
+    }
+
+    for (const button of eyesButtons) {
+      if (!(button instanceof HTMLButtonElement)) continue;
+      button.addEventListener('click', () => {
+        eyes = button.dataset.waveEyes === 'open' ? 'open' : 'closed';
+        for (const other of eyesButtons) other.setAttribute('aria-pressed', String(other === button));
+        renderState.textContent = eyes === 'open' ? '睁眼 · 后部 alpha 振幅减弱' : '闭眼 · 后部 alpha 较明显';
+        draw();
+      });
+    }
+    toggle.addEventListener('click', () => {
+      playing = !playing;
+      toggle.textContent = playing ? '暂停' : '播放';
+      toggle.setAttribute('aria-pressed', String(!playing));
+      if (playing && reducedMotion) draw();
+    });
+    frame();
+  }
+</script>

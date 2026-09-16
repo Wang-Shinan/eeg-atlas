@@ -9,7 +9,7 @@ reading flow with inline self-test questions and grouped figures.
 
 ```bash
 npm install
-npm run dev      # imports chapter text, then serves on http://localhost:4321
+npm run dev      # syncs dataset rules, then serves on http://localhost:4321
 ```
 
 | Script | What it does |
@@ -106,3 +106,18 @@ Tailwind v4 is configured through `@tailwindcss/vite`, with the design tokens
 `@theme` block of `src/styles/global.css`. Chapter body copy is styled by the
 `.prose-chapter` class in that same file rather than by Tailwind utilities, so
 imported Markdown picks up the editorial look without any per-file classes.
+
+## 图谱与阅读界面（2026-09）
+
+- 原始教学图与图注元数据集中在 `src/data/figures.ts`，文件位于 `public/figures/sources/`。
+- `provenance.json` 记录下载来源、作者和许可依据。保留原始图片；中文讲解写在图外。
+- `/sources/` 由同一份元数据生成，新增图片时同时填写出处、许可、图号及对应章节。
+- `AtlasFigure` 支持点击放大、原始尺寸查看、键盘关闭；原有概念示意仍保留并明确标注。
+- 章节上下篇导航仅在同一专题内连接。手机可分别打开章节目录和本页目录。
+- `npm run sync` 会拒绝覆盖非 generated 的人工章节，避免旧导入流程覆盖原创内容。
+
+### 两种发布构建
+
+`npm run build` 保留 Sites 的 Worker、数据库、媒体与在线编辑能力。
+`npm run build:pages` 将纯静态版本输出到 `dist-pages/`，使用 `/eeg-atlas/` 基础路径；GitHub Pages 没有编辑后端，因此此构建不加载编辑器。
+现有 GitHub Actions 使用静态构建；两种输出不会相互覆盖。

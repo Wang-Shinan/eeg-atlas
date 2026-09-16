@@ -1,0 +1,25 @@
+---
+interface Source {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  sources: Source[];
+}
+
+const { sources } = Astro.props;
+---
+
+<p class="not-prose mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-sans text-xs leading-relaxed text-muted">
+  <span class="font-medium text-ink">图示依据</span>
+  <span>·</span>
+  {sources.map((source, index) => (
+    <span>
+      {index > 0 && <span class="mr-2">·</span>}
+      <a href={source.href} target="_blank" rel="noreferrer" class="underline decoration-rule underline-offset-2 hover:text-accent">
+        {source.label}
+      </a>
+    </span>
+  ))}
+</p>

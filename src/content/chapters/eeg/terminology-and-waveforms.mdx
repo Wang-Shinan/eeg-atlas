@@ -7,8 +7,12 @@ track: "eeg"
 group: "基础"
 ---
 
+import AtlasFigure from '../../../components/AtlasFigure.astro';
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import FigureImage from '../../../components/FigureImage.astro';
+import SourceNote from '../../../components/SourceNote.astro';
+import WaveformExplorer from '../../../components/WaveformExplorer.astro';
 
 读图先有共同词汇。频率、振幅、相位、形态说清楚了，别人才知道你看见的是同一件事。
 
@@ -24,6 +28,17 @@ import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 | Beta（β） | &gt; 13 Hz | 前部、药物、紧张 |
 
 边界在不同教材略有出入，报告里写清数字比只写希腊字母更稳妥。
+
+<FigureImage
+  src="/figures/frequency-atlas.png"
+  alt="delta、theta、alpha、beta 四个 EEG 频段的波形和 alpha blocking 示意图"
+  caption="波形按常用频率范围绘制，目的是帮助建立速度与振幅的视觉直觉；频段名称不能替代对分布、状态和形态的完整描述。"
+/>
+<SourceNote sources={[{ label: 'NCBI · Basic Mechanisms Underlying Seizures and Epilepsy', href: 'https://www.ncbi.nlm.nih.gov/books/NBK2510/pdf/Bookshelf_NBK2510.pdf' }, { label: 'PMC · alpha blocking', href: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7217488/' }]} />
+
+<AtlasFigure id="posterior-alpha" />
+
+<details class="not-prose concept-demo"><summary>原理演示：睁眼与闭眼（合成示意）</summary><WaveformExplorer /></details>
 
 ## 振幅、相位与形态
 

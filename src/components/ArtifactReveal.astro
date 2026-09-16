@@ -1,0 +1,106 @@
+<figure class="not-prose my-10 overflow-hidden rounded-xl border border-rule bg-white shadow-sm">
+  <div data-artifact-reveal class="p-5 sm:p-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="font-sans text-xs font-semibold tracking-[0.1em] text-accent">先观察，再揭晓</p>
+        <p class="mt-1 font-serif text-lg font-medium">这页里藏着三类非脑信号</p>
+        <p class="mt-1 max-w-xl font-sans text-xs leading-relaxed text-muted">先看净图，按分布、频率和同步关系作答，再打开标注。</p>
+      </div>
+      <div class="flex shrink-0 gap-2 font-sans text-xs">
+        <button type="button" data-artifact-mode="clean" aria-pressed="true" class="rounded border border-accent bg-accent px-3 py-1.5 text-white">净图</button>
+        <button type="button" data-artifact-mode="annotated" aria-pressed="false" class="rounded border border-rule px-3 py-1.5 text-muted">显示标注</button>
+      </div>
+    </div>
+    <canvas data-artifact-canvas width="960" height="360" class="mt-5 block w-full rounded-lg bg-[#fbfaf7]" role="img" aria-label="包含眨眼、肌电和心电伪迹的合成多通道 EEG 练习图"></canvas>
+    <p data-artifact-state aria-live="polite" class="mt-3 font-sans text-xs text-muted">净图 · 先找前额慢偏转、高频毛刺和 ECG 锁时尖峰</p>
+  </div>
+  <figcaption class="border-t border-rule px-5 py-3 font-sans text-xs leading-relaxed text-muted sm:px-6">合成示意，不是患者记录。标注只强调识别路径；真实判读仍需同步视频、技术备注和多导联电场。</figcaption>
+</figure>
+
+<script>
+  for (const root of document.querySelectorAll('[data-artifact-reveal]')) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-artifact-canvas]');
+    const state = root.querySelector<HTMLElement>('[data-artifact-state]');
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-artifact-mode]');
+    if (!(canvas instanceof HTMLCanvasElement) || !(state instanceof HTMLElement)) continue;
+    const renderCanvas = canvas;
+    const renderState = state;
+    const drawingContext = renderCanvas.getContext('2d');
+    if (!drawingContext) continue;
+    const context: CanvasRenderingContext2D = drawingContext;
+    let annotated = false;
+
+    function draw() {
+      const width = renderCanvas.width;
+      const height = renderCanvas.height;
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = '#fbfaf7';
+      context.fillRect(0, 0, width, height);
+      context.font = '600 13px system-ui, sans-serif';
+      const names = ['Fp1–F7', 'F7–T7', 'T7–P7', 'P7–O1', 'ECG'];
+      for (let row = 0; row < names.length; row += 1) {
+        const baseline = 48 + row * 62;
+        context.fillStyle = '#6b6862';
+        context.fillText(names[row], 12, baseline + 5);
+        context.strokeStyle = '#e2ded4';
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(76, baseline);
+        context.lineTo(width - 16, baseline);
+        context.stroke();
+        context.strokeStyle = row === 4 ? '#487a9c' : '#2f6f68';
+        context.lineWidth = row === 0 ? 3 : 2;
+        context.beginPath();
+        for (let x = 0; x <= width - 100; x += 2) {
+          const t = x / (width - 100);
+          let y = baseline - Math.sin(t * Math.PI * 2 * (5 + row)) * 4;
+          if (row < 2) y -= Math.exp(-Math.pow((t - 0.23) / 0.045, 2)) * (row === 0 ? 44 : 18);
+          if (row < 3 && t > 0.48 && t < 0.66) y -= Math.sin(t * Math.PI * 2 * 58) * (row === 1 ? 13 : 7);
+          for (const center of [0.34, 0.72]) {
+            const distance = Math.abs(t - center);
+            if (row === 4 && distance < 0.012) y -= (1 - distance / 0.012) * 42;
+            if (row === 2 && distance < 0.014) y -= (1 - distance / 0.014) * 14;
+          }
+          if (x === 0) context.moveTo(82 + x, y);
+          else context.lineTo(82 + x, y);
+        }
+        context.stroke();
+      }
+      if (annotated) {
+        const notes: Array<[number, number, number, number, string, string]> = [
+          [205, 10, 130, 118, '眨眼', '#b35d48'],
+          [470, 72, 165, 125, '肌电', '#8a5a2b'],
+          [670, 128, 90, 180, 'ECG 锁时', '#487a9c'],
+        ];
+        context.font = '650 13px system-ui, sans-serif';
+        for (const [x, y, w, h, note, color] of notes) {
+          context.fillStyle = `${color}18`;
+          context.strokeStyle = color;
+          context.lineWidth = 2;
+          context.fillRect(x, y, w, h);
+          context.strokeRect(x, y, w, h);
+          context.fillStyle = color;
+          context.fillText(note, x + 8, y + 18);
+        }
+      }
+    }
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        annotated = button.dataset.artifactMode === 'annotated';
+        for (const other of buttons) {
+          const active = other === button;
+          other.setAttribute('aria-pressed', String(active));
+          other.classList.toggle('border-accent', active);
+          other.classList.toggle('bg-accent', active);
+          other.classList.toggle('text-white', active);
+          other.classList.toggle('border-rule', !active);
+          other.classList.toggle('text-muted', !active);
+        }
+        renderState.textContent = annotated ? '标注图 · 眨眼、肌电和 ECG 锁时伪迹' : '净图 · 先找前额慢偏转、高频毛刺和 ECG 锁时尖峰';
+        draw();
+      });
+    }
+    draw();
+  }
+</script>

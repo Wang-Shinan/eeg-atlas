@@ -7,6 +7,7 @@ track: "eeg"
 group: "发育期 EEG"
 ---
 
+import AtlasFigure from '../../../components/AtlasFigure.astro';
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 
@@ -23,6 +24,9 @@ import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 ## 与成人判读的差异
 
 儿童波幅常更高，睡眠中瞬态更丰富，正常变异与病理的界限需要更多经验。报告应写实龄，并避免用成人阈值生硬切割。
+
+<AtlasFigure id="infant-pdr" />
+<AtlasFigure id="child-spindles" />
 
 <TestYourself answer="实龄 + 状态（醒/睡）">
 <Fragment slot="question">

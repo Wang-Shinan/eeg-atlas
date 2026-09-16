@@ -1,0 +1,19 @@
+---
+import { figures } from '../data/figures';
+import { withBase } from '../lib/urls';
+interface Props { id: string; }
+const { id } = Astro.props;
+const figure = figures.find(item => item.id === id);
+if (!figure) throw new Error(`Unknown atlas figure: ${id}`);
+---
+<figure class="not-prose atlas-figure" id={`figure-${figure.id}`}>
+  <div class="figure-heading"><span>读图 / {figure.label}</span><span>{figure.kind}</span></div>
+  <a class="figure-image-link" href={withBase(figure.src)} data-figure-open data-figure-title={figure.title} aria-label={`放大查看：${figure.title}`} target="_blank" rel="noopener">
+    <img src={withBase(figure.src)} alt={figure.alt} width={figure.width} height={figure.height} loading="lazy" decoding="async" />
+    <span class="figure-expand">放大查看 ⤢</span>
+  </a>
+  <figcaption><strong class="figure-title">{figure.title}</strong><p class="figure-guide">{figure.guide}</p>
+    {figure.context && <p class="figure-context">{figure.context}</p>}
+    <div class="figure-attribution"><span>{figure.author}</span><span>·</span><a href={figure.sourceUrl} target="_blank" rel="noreferrer">{figure.sourceLabel} ↗</a><span>·</span><a href={figure.licenseUrl} target="_blank" rel="noreferrer">{figure.license}</a><span>· 原图未改动</span></div>
+  </figcaption>
+</figure>

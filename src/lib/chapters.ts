@@ -59,7 +59,9 @@ export async function getTrackSections(): Promise<TrackSection[]> {
 export async function getChapterNeighbors(
   id: string,
 ): Promise<{ prev: Chapter | undefined; next: Chapter | undefined }> {
-  const chapters = await getSortedChapters();
+  const all = await getSortedChapters();
+  const current = all.find(chapter => chapter.id === id);
+  const chapters = all.filter(chapter => chapter.data.track === current?.data.track);
   const index = chapters.findIndex((chapter) => chapter.id === id);
   return { prev: chapters[index - 1], next: chapters[index + 1] };
 }

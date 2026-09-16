@@ -9,11 +9,14 @@
     "sync": "tsx scripts/sync-content.ts",
     "dev": "npm run sync:rules && astro dev",
     "build": "astro build",
+    "postbuild": "node scripts/sites-worker.mjs",
     "build:local": "npm run sync:rules && astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test:editor": "node scripts/smoke-editor-worker.mjs",
     "astro": "astro",
-    "sync:rules": "tsx scripts/sync-dataset-rules.ts"
+    "sync:rules": "tsx scripts/sync-dataset-rules.ts",
+    "build:pages": "node scripts/build-pages.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",

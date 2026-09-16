@@ -9,12 +9,21 @@ group: "正常 EEG"
 
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import FigureImage from '../../../components/FigureImage.astro';
+import SourceNote from '../../../components/SourceNote.astro';
 
 正常变异是「像癫痫样、却不是」的经典陷阱。原则是：典型电场 + 典型背景 + 无演进，才考虑变异；拿不准就描述观察所见，勿硬贴诊断标签。
 
 ## 为何容易误判
 
 许多正常变异波幅高、上升支陡，或在困倦时成串出现。若只凭「尖」，忽略分布与是否继发慢波、是否演变，就会假阳性。假阳性的代价是不必要的抗癫痫药与污名。
+
+<FigureImage
+  src="/figures/sharp-vs-wicket.png"
+  alt="癫痫样尖波与正常 wicket 波的多通道合成波形对照"
+  caption="对照重点不是“谁更尖”，而是后继慢波、跨导联电场、状态依赖性和是否演进。"
+/>
+<SourceNote sources={[{ label: 'LearningEEG · Normal Variants', href: 'https://www.learningeeg.com/normal-variants' }, { label: 'ACNS Critical Care EEG Terminology 2021', href: 'https://www.acns.org/UserFiles/file/ACNSStandardizedCriticalCareEEGTerminology_rev2021.pdf' }]} />
 
 ## 常见类别（概念框架）
 

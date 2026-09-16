@@ -7,10 +7,15 @@ track: "eeg"
 group: "正常 EEG"
 ---
 
+import AtlasFigure from '../../../components/AtlasFigure.astro';
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import ArtifactReveal from '../../../components/ArtifactReveal.astro';
 
 伪迹是 EEG 最常见的「假敌人」。技术师备注、同步视频与多导联核对是分辨伪迹的三件武器。
+
+<AtlasFigure id="eye-flutter" />
+<AtlasFigure id="electrode-pop" />
 
 ## 生理伪迹
 
@@ -29,6 +34,8 @@ import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 2. 是否与已知生理事件同步（眨眼、心跳、呼吸）？  
 3. 换参考/双极后是否仍像「脑」？  
 4. 单一电极问题还是多电极合理电场？
+
+<details class="not-prose concept-demo"><summary>原理演示：伪迹与背景（合成示意）</summary><ArtifactReveal /></details>
 
 <TestYourself answer="单电极问题或与非脑事件同步">
 <Fragment slot="question">

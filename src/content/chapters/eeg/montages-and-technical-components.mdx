@@ -7,8 +7,12 @@ track: "eeg"
 group: "基础"
 ---
 
+import AtlasFigure from '../../../components/AtlasFigure.astro';
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import FigureImage from '../../../components/FigureImage.astro';
+import SourceNote from '../../../components/SourceNote.astro';
+import TechnicalSettingsExplorer from '../../../components/TechnicalSettingsExplorer.astro';
 
 同一脑活动，换一套导联或滤波，画面可以完全不同。判读前先确认你在看什么技术设定。
 
@@ -16,11 +20,20 @@ import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 
 国际 10–20 系统用颅骨标志点按 10% 或 20% 间距放置电极。字母表示脑叶（F 额、C 中央、T 颞、P 顶、O 枕），奇数在左、偶数在右，z 在中线。它保证不同实验室之间位置大致可比，但并不等于功能分区的精确边界。
 
+<AtlasFigure id="electrode-map" />
+
 ## 双极与参考导联
 
 **双极导联**显示相邻电极之差，沿一条链排列时，病灶常表现为**相位反转**（相邻导联波形上下翻转）。**参考导联**把各电极对同一公共参考作差，便于看「谁相对参考更高」，但参考本身若被污染，整屏都会歪。
 
 没有绝对「最好」的导联：双极利于定位相位反转，参考利于看绝对极性与广泛性分布。重要发现应在多种导联上核对。
+
+<FigureImage
+  src="/figures/montage-phase-reversal.png"
+  alt="同一局灶源在纵向双极和平均参考导联中的合成波形对照"
+  caption="导联是显示规则：双极链突出相位反转，平均参考突出最大波幅。图中波形为原创合成示意。"
+/>
+<SourceNote sources={[{ label: 'LearningEEG · Montages & Technical', href: 'https://www.learningeeg.com/montages' }, { label: 'ACNS Guideline 1 · Minimum Technical Requirements', href: 'https://www.acns.org/UserFiles/file/Guideline1-MinimumTechnicalRequirementsforPerofrmingClinicalEEG_v1.pdf' }]} />
 
 <TestYourself answer="相邻双极导联出现相位反转">
 <Fragment slot="question">
@@ -40,6 +53,8 @@ import KeyTakeaways from '../../../components/KeyTakeaways.astro';
 高通（低频滤波）去掉缓慢漂移，设太高会吃掉慢波病理；低通（高频滤波）抑制肌电，设太低会磨圆棘波。陷波滤波针对工频干扰，但也可能影响附近频率成分。
 
 灵敏度（µV/mm）决定同样电压占多少格：太「钝」会漏看低幅放电，太「敏」则背景喧闹。时间基准（mm/s）影响波形疏密，比较振幅与频率时要先看标尺。
+
+<TechnicalSettingsExplorer />
 
 ## 阻抗与采集质量
 

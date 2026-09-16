@@ -1,0 +1,56 @@
+<div class="not-prose my-10 rounded-xl border border-rule bg-white p-5 shadow-sm sm:p-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="font-sans text-xs font-semibold tracking-[0.1em] text-accent">流程动画</p>
+      <p class="mt-1 font-serif text-lg font-medium">遮罩不是装饰：它制造学习信号</p>
+    </div>
+    <p class="font-sans text-xs text-muted">绿色 = 保留 token · 米色 = 被遮住的 token</p>
+  </div>
+  <div class="model-pipeline mt-6" aria-label="EEG 基础模型从原始多通道输入到下游任务的流程">
+    <div class="model-step"><span class="model-step-kicker">01</span><strong>多通道 EEG</strong><small>通道身份 + 时间窗</small></div>
+    <div class="model-connector"><i></i><i></i><i></i></div>
+    <div class="model-step model-step-soft"><span class="model-step-kicker">02</span><strong>切成 patch</strong><small>随机遮住一部分</small></div>
+    <div class="model-connector"><i></i><i></i><i></i></div>
+    <div class="model-step"><span class="model-step-kicker">03</span><strong>重建 / 对比</strong><small>学时空表示</small></div>
+    <div class="model-connector"><i></i><i></i><i></i></div>
+    <div class="model-step"><span class="model-step-kicker">04</span><strong>下游任务</strong><small>检测 · 分期 · 解码</small></div>
+  </div>
+  <p class="mt-5 font-sans text-xs leading-relaxed text-muted">动画强调一个容易被忽略的事实：模型学到什么，不只由架构决定，也由窗口、通道、遮罩和任务协议共同决定。</p>
+</div>
+
+<style>
+  .model-pipeline {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) 4rem minmax(10rem, 1fr) 4rem minmax(10rem, 1fr) 4rem minmax(10rem, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .model-step {
+    min-height: 9rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.75rem;
+    background: var(--color-paper);
+  }
+  .model-step-soft { background: var(--color-accent-soft); }
+  .model-step-kicker { color: var(--color-accent); font: 600 0.6875rem/1 var(--font-sans); letter-spacing: 0.1em; }
+  .model-step strong { font: 650 1rem/1.2 var(--font-sans); }
+  .model-step small { color: var(--color-muted); font: 0.75rem/1.45 var(--font-sans); }
+  .model-connector { position: relative; height: 2rem; overflow: hidden; }
+  .model-connector::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--color-rule); }
+  .model-connector i { position: absolute; top: calc(50% - 0.22rem); width: 0.45rem; height: 0.45rem; border-radius: 999px; background: var(--color-accent); animation: model-flow 2.8s linear infinite; }
+  .model-connector i:nth-child(2) { animation-delay: 0.9s; }
+  .model-connector i:nth-child(3) { animation-delay: 1.8s; }
+  @keyframes model-flow { from { left: -0.5rem; } to { left: calc(100% + 0.5rem); } }
+  @media (max-width: 900px) {
+    .model-pipeline { grid-template-columns: 1fr; gap: 0.5rem; }
+    .model-connector { height: 1.25rem; width: 100%; transform: rotate(90deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .model-connector i { animation: none; left: 50%; }
+  }
+</style>

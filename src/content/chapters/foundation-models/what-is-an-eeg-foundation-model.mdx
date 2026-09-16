@@ -8,9 +8,19 @@ group: "模型与评测"
 ---
 
 import TestYourself from '../../../components/TestYourself.astro';
+import FigureImage from '../../../components/FigureImage.astro';
+import SourceNote from '../../../components/SourceNote.astro';
+import ModelPipeline from '../../../components/ModelPipeline.astro';
 
 前面的章节把 EEG 当作训练有素的人去「读」的东西。本专题讲的是另一条平行路线：让
 *模型*去读 EEG——在无标注记录上预训练大型神经网络，再适配到具体任务。
+
+<FigureImage
+  src="/figures/model-pipeline.png"
+  alt="EEG 基础模型从多通道原始信号、切窗和遮罩 patch 到表示学习与下游任务的流程图"
+  caption="把预处理、输入结构、预训练目标和下游任务放在一条链上，提醒读者：所谓“模型能力”总是和数据协议一起出现。"
+/>
+<SourceNote sources={[{ label: 'PubMed · Foundation models for EEG decoding', href: 'https://pubmed.ncbi.nlm.nih.gov/41145005/' }, { label: 'NeurIPS 2025 · REVE: A Foundation Model for EEG', href: 'https://papers.neurips.cc/paper_files/paper/2025/file/20a917f77773ac0fa8bea2bdd6606b66-Paper-Conference.pdf' }]} />
 
 ## 为什么预训练适合 EEG
 
@@ -42,6 +52,8 @@ import TestYourself from '../../../components/TestYourself.astro';
 </TestYourself>
 
 ## 预训练目标
+
+<ModelPipeline />
 
 三类自监督目标目前占主导。
 

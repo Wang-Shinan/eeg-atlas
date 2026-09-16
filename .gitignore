@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 # Shallow clone used by sync:rules
 .cache/
+
+# Static GitHub Pages export and local Sites execution state
+dist-pages/
+.sites-runtime/

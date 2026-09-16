@@ -1,0 +1,99 @@
+<figure class="not-prose my-10 overflow-hidden rounded-xl border border-rule bg-white shadow-sm">
+  <div data-seizure-evolution class="p-5 sm:p-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="font-sans text-xs font-semibold tracking-[0.1em] text-accent">互动时间轴</p>
+        <p class="mt-1 font-serif text-lg font-medium">发作的关键是演进，而不是“看起来很整齐”</p>
+        <p class="mt-1 max-w-xl font-sans text-xs leading-relaxed text-muted">动画将频率、振幅和参与导联逐步改变；暂停在任意阶段，练习描述发生了什么。</p>
+      </div>
+      <button type="button" data-seizure-toggle aria-pressed="false" class="shrink-0 self-start rounded border border-rule px-3 py-1.5 font-sans text-xs text-muted hover:border-accent/50">暂停</button>
+    </div>
+    <canvas data-seizure-canvas width="960" height="330" class="mt-5 block w-full rounded-lg bg-[#fbfaf7]" role="img" aria-label="合成 EEG 发作演进动画，展示起始、演进、扩散和发作后阶段"></canvas>
+    <div class="mt-3 flex items-center justify-between gap-4 font-sans text-xs">
+      <span data-seizure-state class="font-medium text-accent">1 · 起始：局部节律</span>
+      <span class="text-muted">合成示意 / 非诊断规则</span>
+    </div>
+  </div>
+  <figcaption class="border-t border-rule px-5 py-3 font-sans text-xs leading-relaxed text-muted sm:px-6">学习时先问：频率是否改变？振幅是否改变？电场是否扩大或迁移？再结合持续时间和临床同步。</figcaption>
+</figure>
+
+<script>
+  for (const root of document.querySelectorAll('[data-seizure-evolution]')) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-seizure-canvas]');
+    const state = root.querySelector<HTMLElement>('[data-seizure-state]');
+    const toggle = root.querySelector<HTMLButtonElement>('[data-seizure-toggle]');
+    if (!(canvas instanceof HTMLCanvasElement) || !(state instanceof HTMLElement) || !(toggle instanceof HTMLButtonElement)) continue;
+    const renderCanvas = canvas;
+    const renderState = state;
+    const drawingContext = renderCanvas.getContext('2d');
+    if (!drawingContext) continue;
+    const context: CanvasRenderingContext2D = drawingContext;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let time = reducedMotion ? 7.5 : 0;
+    let playing = !reducedMotion;
+    let last = performance.now();
+
+    function draw() {
+      const width = renderCanvas.width;
+      const height = renderCanvas.height;
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = '#fbfaf7';
+      context.fillRect(0, 0, width, height);
+      const stage = Math.min(3, Math.floor(time / 3));
+      const colors = ['#b35d48', '#8a5a2b', '#2f6f68', '#487a9c'];
+      const labels = ['1 · 起始：局部节律', '2 · 演进：频率 / 波幅改变', '3 · 扩散：更多导联参与', '4 · 发作后：衰减 / 慢化'];
+      renderState.textContent = labels[stage];
+      context.font = '600 14px system-ui, sans-serif';
+      const active = stage === 0 ? 1 : stage === 1 ? 2 : 4;
+      const frequency = stage === 0 ? 2.2 : stage === 1 ? 4.2 : stage === 2 ? 6.2 : 1.5;
+      const amplitude = stage === 0 ? 18 : stage === 1 ? 30 : stage === 2 ? 34 : 13;
+      for (let row = 0; row < 5; row += 1) {
+        const baseline = 48 + row * 56;
+        context.fillStyle = '#6b6862';
+        context.fillText(['F3', 'C3', 'P3', 'F4', 'C4'][row], 18, baseline + 5);
+        context.strokeStyle = '#e2ded4';
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(60, baseline);
+        context.lineTo(width - 18, baseline);
+        context.stroke();
+        context.strokeStyle = row < active ? colors[stage] : '#c9c5bd';
+        context.globalAlpha = row < active ? 1 : 0.52;
+        context.lineWidth = row === 0 ? 3.2 : 2.2;
+        context.beginPath();
+        for (let x = 0; x <= width - 80; x += 2) {
+          const localAmp = row < active ? amplitude * (1 - row * 0.08) : 6;
+          const y = baseline - Math.sin((x / width) * Math.PI * 2 * frequency + time * 3 + row * 0.5) * localAmp;
+          if (x === 0) context.moveTo(x + 65, y);
+          else context.lineTo(x + 65, y);
+        }
+        context.stroke();
+        context.globalAlpha = 1;
+      }
+      context.fillStyle = '#e2ded4';
+      context.fillRect(65, height - 24, width - 85, 5);
+      context.fillStyle = colors[stage];
+      context.fillRect(65, height - 24, ((time % 12) / 12) * (width - 85), 5);
+    }
+
+    function frame(now: number) {
+      const delta = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (playing) {
+        time += delta;
+        if (time >= 12) time = 0;
+      }
+      draw();
+      if (!reducedMotion) requestAnimationFrame(frame);
+    }
+
+    toggle.addEventListener('click', () => {
+      playing = !playing;
+      toggle.textContent = playing ? '暂停' : '播放';
+      toggle.setAttribute('aria-pressed', String(!playing));
+      if (playing && reducedMotion) draw();
+    });
+    draw();
+    if (!reducedMotion) requestAnimationFrame(frame);
+  }
+</script>

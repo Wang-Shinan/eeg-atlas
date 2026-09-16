@@ -1,0 +1,16 @@
+---
+import { withBase } from '../lib/urls';
+
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+}
+
+const { src, alt, caption } = Astro.props;
+---
+
+<figure class="not-prose my-10">
+  <a href={withBase(src)} data-figure-open data-figure-title={alt} target="_blank" rel="noopener" aria-label={`放大查看：${alt}`}><img src={withBase(src)} alt={alt} loading="lazy" class="w-full rounded-xl border border-rule bg-white shadow-sm" /></a>
+  {caption && <figcaption class="mt-3 font-sans text-xs leading-relaxed text-muted">{caption}</figcaption>}
+</figure>

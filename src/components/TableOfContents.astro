@@ -1,36 +1,25 @@
 ---
 import type { MarkdownHeading } from 'astro';
-
-interface Props {
-  headings: MarkdownHeading[];
-}
-
-const { headings } = Astro.props;
-// Deeper levels make the rail noisy next to a long reading column.
-const visible = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+interface Props { headings: MarkdownHeading[]; mobile?: boolean; }
+const { headings, mobile = false } = Astro.props;
+const visible = headings.filter(h => h.depth === 2 || h.depth === 3);
 ---
-
-{
-  visible.length > 0 && (
-    <nav aria-label="本页目录" class="sticky top-24">
-      <p class="font-sans text-[0.6875rem] font-semibold tracking-[0.08em] text-muted">
-        本页目录
-      </p>
-      <ul class="mt-3 space-y-2 border-l border-rule">
-        {visible.map((heading) => (
-          <li>
-            <a
-              href={`#${heading.slug}`}
-              class:list={[
-                'block border-l-2 border-transparent py-0.5 font-sans text-[0.8125rem] leading-snug text-muted transition-colors hover:border-accent hover:text-ink',
-                heading.depth === 2 ? 'pl-3' : 'pl-6 text-[0.75rem]',
-              ]}
-            >
-              {heading.text}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  )
+{visible.length > 0 && (mobile ? <details class="mobile-toc"><summary>本章目录 <span>{visible.filter(h => h.depth === 2).length} 个小节</span></summary><nav aria-label="本章目录"><ul>{visible.map(h => <li><a data-toc-link href={`#${h.slug}`} class:list={[h.depth === 3 && 'toc-subheading']}>{h.text}</a></li>)}</ul></nav></details> : <nav class="chapter-toc" aria-label="本章目录"><p class="eyebrow">ON THIS PAGE</p><h2>本章目录</h2><ul>{visible.map(h => <li><a data-toc-link href={`#${h.slug}`} class:list={[h.depth === 3 && 'toc-subheading']}>{h.text}</a></li>)}</ul><a class="back-to-top" href="#main-content">回到顶部 ↑</a></nav>)}
+<script>
+const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'));
+const headings = Array.from(document.querySelectorAll<HTMLElement>('.prose-chapter > h2, .prose-chapter > h3'));
+let pending = false;
+function updateActive() {
+  const threshold = (document.querySelector('.site-header')?.getBoundingClientRect().height ?? 86) + 45;
+  let current = headings[0];
+  for (const heading of headings) { if (heading.getBoundingClientRect().top <= threshold) current = heading; }
+  for (const link of links) {
+    if (current && decodeURIComponent(link.hash.slice(1)) === current.id) link.setAttribute('aria-current', 'location');
+    else link.removeAttribute('aria-current');
+  }
+  pending = false;
 }
+addEventListener('scroll', () => { if (!pending) { pending = true; requestAnimationFrame(updateActive); } }, {passive: true});
+for (const link of links) link.addEventListener('click', () => link.closest('details')?.removeAttribute('open'));
+updateActive();
+</script>

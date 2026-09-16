@@ -9,8 +9,17 @@ group: "基础"
 
 import TestYourself from '../../../components/TestYourself.astro';
 import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import FigureImage from '../../../components/FigureImage.astro';
+import SourceNote from '../../../components/SourceNote.astro';
 
 脑电图记录的不是「想法」，而是大量神经元同步活动在头皮上留下的电位差。要读懂后面的波形，先要弄清这些电位从哪里来。
+
+<FigureImage
+  src="/figures/signal-origin.png"
+  alt="从突触后电位、锥体细胞偶极子到头皮电极差分和 EEG 波形的三阶段示意图"
+  caption="把细胞尺度的同步活动连接到临床屏幕上的电压轨迹。图中“EEG 主要不是动作电位本身”是教学上的尺度区分，并不意味着动作电位对所有 EEG 频段都绝对没有贡献。"
+/>
+<SourceNote sources={[{ label: 'NCBI · The Scientific Basis of EEG', href: 'https://www.ncbi.nlm.nih.gov/books/NBK390351/' }, { label: 'PLOS Computational Biology · scalp EEG biophysics', href: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11809874/' }]} />
 
 ## 静息电位与动作电位
 
