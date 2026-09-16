@@ -55,7 +55,8 @@ with tempfile.TemporaryDirectory() as temporary:
             page.keyboard.press('ArrowLeft')
             root.locator('[data-view="top"]').click()
             page.wait_for_timeout(300)
-            root.screenshot(path=str(OUT / 'atlas-desktop.png'))
+            # Hide sticky page chrome only while capturing the component for review.
+            root.screenshot(path=str(OUT / 'atlas-desktop.png'), style='.site-header { visibility: hidden !important; }')
             root.locator('[data-atlas-clear]').click()
             expect(root).to_have_attribute('data-selected-count', '0')
             for family in ['10–20', '10–10', 'BioSemi', 'HydroCel']:
@@ -68,7 +69,7 @@ with tempfile.TemporaryDirectory() as temporary:
             page.set_viewport_size({'width': 390, 'height': 844})
             page.wait_for_timeout(300)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Mobile horizontal overflow'
-            root.screenshot(path=str(OUT / 'atlas-mobile.png'))
+            root.screenshot(path=str(OUT / 'atlas-mobile.png'), style='.site-header { visibility: hidden !important; }')
             assert (page.request.get(url + '/atlas/THIRD_PARTY_NOTICES.txt')).ok
             plain = browser.new_context(java_script_enabled=False)
             plain_page = plain.new_page()
