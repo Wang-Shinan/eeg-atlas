@@ -1,0 +1,35 @@
+---
+import { frequencyBands } from '../data/frequency-bands';
+interface Props { compact?: boolean; }
+const { compact = false } = Astro.props;
+const trace = (frequency: number, baseline: number) => Array.from({ length: 1001 }, (_, i) => `${i ? 'L' : 'M'}${160 + i * 0.68},${(baseline - 19 * Math.sin(2 * Math.PI * frequency * i / 1000)).toFixed(2)}`).join(' ');
+const mixture = Array.from({ length: 1001 }, (_, i) => `${i ? 'L' : 'M'}${160 + i * 0.68},${(390 - 13 * Math.sin(4 * Math.PI * i / 1000) - 7 * Math.sin(40 * Math.PI * i / 1000)).toFixed(2)}`).join(' ');
+---
+<section class="frequency-bands not-prose" aria-label="五类常用 EEG 频段">
+  <div class="band-table-wrap"><table>
+    <thead><tr><th scope="col">频段</th><th scope="col">本教程的数值约定</th>{!compact && <th scope="col">阅读提示</th>}</tr></thead>
+    <tbody>{frequencyBands.map(b => <tr><th scope="row">{b.symbol} · {b.name}</th><td>{b.range}</td>{!compact && <td>{b.note}</td>}</tr>)}</tbody>
+  </table></div>
+  <p class="band-note">频段边界因教材、任务和分析协议而异。这里用不重叠的区间避免端点歧义；80 Hz 不是 gamma 的生理上限，0.5 Hz 以下的慢变化也并非不存在。研究报告应写出实际频率范围。</p>
+  {!compact && <figure>
+    <div class="band-plot-scroll"><svg viewBox="0 0 880 450" role="img" aria-label="相同一秒时间窗和相同振幅的 2、6、10、20、40 Hz 合成波形，以及 2 与 20 Hz 的叠加示意">
+      <text x="160" y="23" class="plot-caption">每条波形均显示 1 秒；前五行振幅相同</text>
+      {[0, .25, .5, .75, 1].map(t => <g><line x1={160 + 680 * t} x2={160 + 680 * t} y1="35" y2="419" class="grid" /><text x={160 + 680 * t} y="443" text-anchor="middle" class="tick">{t} s</text></g>)}
+      {frequencyBands.map((b, i) => <g><text x="18" y={64 + i * 62} class="band-label">{b.symbol} · {b.example} Hz</text><line x1="160" x2="840" y1={58 + i * 62} y2={58 + i * 62} class="baseline" /><path d={trace(b.example, 58 + i * 62)} class="trace" /></g>)}
+      <text x="18" y="385" class="band-label">混合示例</text><text x="18" y="403" class="tick">2 Hz + 20 Hz</text><path d={mixture} class="trace mix" />
+    </svg></div>
+    <figcaption>原创合成示意，不是患者记录。统一振幅只用于隔离“频率”这个变量，不代表真实 EEG 各频段的振幅相同；最后一行说明一条曲线可以同时含有快、慢成分。</figcaption>
+  </figure>}
+</section>
+<style>
+  .frequency-bands { margin: 2rem 0; font-family: var(--font-sans, sans-serif); }
+  .band-table-wrap,.band-plot-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+  th,td { text-align: left; vertical-align: top; padding: .8rem; border-bottom: 1px solid var(--color-rule,#d9ddd8); line-height: 1.65; }
+  th { color: var(--color-ink,#142e35); } thead { background: var(--color-accent-soft,#eef4ef); }
+  .band-note,figcaption { font-size: .82rem; line-height: 1.8; color: var(--color-muted,#64706c); margin: 1rem 0; }
+  figure { margin: 1.5rem 0 0; } svg { width: 100%; min-width: 620px; display: block; background: #f7f8f4; border-radius: .6rem; }
+  .grid { stroke: #dbe3dc; stroke-dasharray: 3 5; } .baseline { stroke: #e4e9e3; }
+  .trace { fill: none; stroke: #28695e; stroke-width: 1.65; } .mix { stroke: #906139; }
+  text { fill: #52625c; font: 13px system-ui,sans-serif; } .band-label { font-size: 16px; font-weight: 600; } .tick { font-size: 12px; }
+</style>

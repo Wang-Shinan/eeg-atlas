@@ -29,3 +29,9 @@ pnpm-debug.log*
 # Static GitHub Pages export and local Sites execution state
 dist-pages/
 .sites-runtime/
+
+# Reproducible atlas export and local validation artifacts
+public/atlas/data/
+test-artifacts/
+.venv/
+__pycache__/

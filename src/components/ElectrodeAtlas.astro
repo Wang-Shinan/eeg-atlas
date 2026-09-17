@@ -1,0 +1,65 @@
+---
+import { withBase } from '../lib/urls';
+---
+<section class="electrode-atlas not-prose" data-electrode-atlas data-url={withBase('/atlas/data/atlas.json')} aria-label="三维电极布局浏览器">
+  <header class="atlas-heading"><div><span>SPATIAL ATLAS / 空间图谱</span><h3>同一空间，不同记录布局</h3></div><button type="button" class="atlas-load" data-atlas-load>加载三维图谱</button></header>
+  <p class="atlas-status" data-atlas-status role="status" aria-live="polite">点击加载真实模板表面与电极位置。此组件不上传数据，也不连接外部渲染服务。</p>
+  <div class="atlas-viewport" data-atlas-viewport>
+    <canvas data-atlas-canvas tabindex="0" aria-label="可交互三维脑、头皮与电极；拖动旋转，滚轮或双指缩放。聚焦后方向键旋转，加减键缩放，R 复位。"></canvas>
+    <canvas data-atlas-overlay aria-hidden="true"></canvas>
+    <span class="atlas-canvas-note">真实模板表面 · 非个体配准<br />电极透视显示，背面点较淡</span>
+  </div>
+  <div data-atlas-controls hidden>
+    <nav class="atlas-toolbar" aria-label="三维视角">
+      <button type="button" data-view="front">正面</button><button type="button" data-view="top">俯视</button><button type="button" data-view="left">左侧</button><button type="button" data-view="right">右侧</button><button type="button" data-view="reset">复位</button><button type="button" data-zoom="1.2" aria-label="放大">＋</button><button type="button" data-zoom="0.833333" aria-label="缩小">−</button>
+    </nav>
+    <div class="atlas-settings"><label><input type="checkbox" data-atlas-brain checked />皮层表面</label><label><input type="checkbox" data-atlas-scalp checked />头皮表面</label><label><input type="checkbox" data-atlas-fiducials checked />基准点</label><label><input type="checkbox" data-atlas-labels />电极名称</label><label class="atlas-opacity">头皮不透明度 <input type="range" min="0" max="0.6" value="0.12" step="0.02" data-atlas-opacity /></label></div>
+    <div class="atlas-panel-grid"><fieldset><legend>按颜色叠加布局</legend><div data-atlas-groups></div><p class="atlas-hint">每套布局可选择具体型号。颜色表示布局来源，不表示脑功能或信号强弱。</p></fieldset>
+      <fieldset><legend>勾选电极高亮</legend><label class="atlas-search-label">搜索电极或型号<input type="search" data-atlas-search placeholder="例如 Cz、E129、biosemi64" /></label><div class="atlas-list" data-atlas-list></div><button type="button" data-atlas-clear>清除高亮</button></fieldset></div>
+    <div class="atlas-details" data-atlas-details aria-label="选中电极的坐标"></div>
+    <p class="atlas-hint">鼠标拖动或单指拖动旋转；滚轮、双指或 ＋/− 缩放。电极超过 80 个时，只标注悬停和选中项以避免遮挡。重合点保留原坐标，可通过列表分别选中。</p>
+  </div>
+  <footer>坐标：MNE head，x 向右、y 向前、z 向上；数字显示为 mm，数据文件使用 m。<br /><a href={withBase('/atlas/data/atlas.json')} download>坐标、表面与来源 JSON</a><span aria-hidden="true"> · </span><a href={withBase('/atlas/THIRD_PARTY_NOTICES.txt')}>模板出处与许可</a>。fsaverage/FreeSurfer 与 MNE 模板仅用于教学展示，不代表个体测量或临床定位结果。</footer>
+  <noscript><p>三维交互需要 JavaScript。正文中的二维命名图、模板说明和下载资料仍可阅读。</p></noscript>
+</section>
+<script>
+  import { mountElectrodeAtlas } from '../lib/electrode-atlas';
+  for (const root of document.querySelectorAll<HTMLElement>('[data-electrode-atlas]')) {
+    const button = root.querySelector<HTMLButtonElement>('[data-atlas-load]');
+    const status = root.querySelector<HTMLElement>('[data-atlas-status]');
+    button?.addEventListener('click', async () => {
+      button.disabled = true; button.textContent = '正在加载…';
+      try { await mountElectrodeAtlas(root); button.textContent = '已加载'; }
+      catch (error) { button.disabled = false; button.textContent = '重新加载'; if (status) status.textContent = error instanceof Error ? error.message : '图谱加载失败，请重试。'; }
+    });
+  }
+</script>
+<style>
+  .electrode-atlas { margin: 2rem 0; border: 1px solid #cddbd4; border-radius: 12px; overflow: hidden; font-family: var(--font-sans,system-ui,sans-serif); color: #243d38; background: #f7f9f5; }
+  .atlas-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.2rem .3rem; }
+  .atlas-heading span { font-size: .65rem; color: #4e7568; letter-spacing: .12em; } .atlas-heading h3 { margin: .35rem 0; font-size: 1.1rem; }
+  .electrode-atlas button { cursor: pointer; border: 1px solid #c5d3ca; border-radius: 5px; background: #fff; color: #234d42; padding: .5rem .7rem; font: inherit; font-size: .78rem; }
+  .electrode-atlas button:hover { background: #e6efe6; } .electrode-atlas button:disabled { cursor: default; opacity: .65; }
+  .electrode-atlas :focus-visible { outline: 3px solid #278c74; outline-offset: 3px; }
+  .atlas-status { font-size: .78rem; padding: 0 1.2rem; line-height: 1.7; min-height: 2.6em; }
+  .atlas-viewport { position: relative; height: 440px; background: #0e1d24; }
+  .atlas-viewport canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+  [data-atlas-canvas] { touch-action: none; cursor: grab; } [data-atlas-overlay] { pointer-events: none; }
+  .atlas-canvas-note { position: absolute; left: 14px; bottom: 12px; color: #afc4c0; font-size: .68rem; line-height: 1.7; pointer-events: none; }
+  .atlas-toolbar,.atlas-settings { display: flex; gap: .45rem .8rem; flex-wrap: wrap; padding: .8rem 1rem 0; }
+  .atlas-settings { font-size: .77rem; align-items: center; padding-bottom: .9rem; } .atlas-settings label { display: flex; gap: .3rem; align-items: center; }
+  .electrode-atlas input[type='checkbox'] { accent-color: #267f68; width: 16px; height: 16px; flex: 0 0 auto; }
+  .atlas-opacity input { width: 85px; } .atlas-panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: .3rem 1rem 1rem; }
+  fieldset { min-width: 0; border: 1px solid #d8e1d7; border-radius: 7px; padding: .85rem; margin: 0; } legend { font-size: .82rem; font-weight: 600; padding: 0 .3rem; }
+  .atlas-hint { font-size: .73rem; color: #617268; line-height: 1.8; padding: 0 1rem; } fieldset .atlas-hint { padding: 0; margin-bottom: 0; }
+  .electrode-atlas :global(.atlas-family) { margin-bottom: .8rem; }
+  .electrode-atlas :global(.atlas-family > label) { display: flex; align-items: center; gap: .4rem; font-size: .8rem; font-weight: 600; border-left: 5px solid var(--family-color); padding-left: .35rem; margin-bottom: .3rem; }
+  .electrode-atlas :global(.atlas-family select) { width: 100%; font-size: .72rem; border: 1px solid #cbd8d0; border-radius: 4px; padding: .45rem .15rem; background: #fff; color: #233e35; }
+  .atlas-search-label { display: block; font-size: .75rem; } .atlas-search-label input { display: block; width: 100%; box-sizing: border-box; padding: .6rem; margin: .4rem 0; border: 1px solid #cbd8d0; border-radius: 4px; background: #fff; font: inherit; }
+  .atlas-list { max-height: 215px; overflow: auto; margin: .6rem 0; font-size: .73rem; }
+  .atlas-list :global(label) { display: flex; align-items: center; gap: .4rem; border-left: 3px solid var(--electrode-color); margin-bottom: .3rem; padding: .2rem .25rem; overflow-wrap: anywhere; }
+  .atlas-details { background: #eaf0e8; margin: 0 1rem; padding: .8rem; font: .74rem/1.8 system-ui,sans-serif; overflow-wrap: anywhere; border-radius: 5px; }
+  .atlas-details :global(p) { margin: .15rem 0; }
+  footer { border-top: 1px solid #d8e1d7; padding: .9rem 1.2rem; font-size: .72rem; line-height: 1.8; color: #617268; } a { color: #28644f; text-decoration: underline; }
+  @media(max-width:580px) { .atlas-panel-grid { grid-template-columns: 1fr; } .atlas-viewport { height: 350px; } .atlas-heading { align-items: flex-start; } .atlas-heading h3 { font-size: 1rem; } .atlas-load { flex-shrink: 0; } }
+</style>

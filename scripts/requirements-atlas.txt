@@ -1,0 +1,4 @@
+# Build-time only. Browser/runtime has no Python or external CDN dependency.
+mne==1.13.2
+nilearn==0.12.1
+nibabel==5.3.2
