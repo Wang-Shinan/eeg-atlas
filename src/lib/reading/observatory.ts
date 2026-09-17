@@ -175,7 +175,9 @@ function mount(root: HTMLElement, base: Recording) {
     spectraForSelection(); const i = active(), fs = data.sampleRate, bb = frequencyBand();
     const powers = spectra.map(s => bandPower(s, bb.lo, bb.hi)), instant = data.values.map(v => v[a]);
     mapValues = mapMode.value === 'voltage' ? instant : powers;
-    cursorA.value = String(a / fs); cursorB.value = String(b / fs);
+    // A queued redraw must not overwrite a numeric field while the reader is typing.
+    if (document.activeElement !== cursorA) cursorA.value = String(a / fs);
+    if (document.activeElement !== cursorB) cursorB.value = String(b / fs);
     const segment = data.values[i].slice(selected[0], selected[1]), stats = extent(segment), dt = Math.abs(b - a) / fs;
     field(root, 'context').textContent = `${data.kind === 'real' ? '真实数据' : '合成示意'} · ${data.reference}。${data.condition}`;
     field(root, 'measure').textContent = `${data.channels[i].name}：Δt = ${fmt(dt, 4)} s；V(B)−V(A) = ${fmt(data.values[i][b] - data.values[i][a])} µV；1/Δt = ${dt ? fmt(1 / dt) : '未定义'} Hz`;
