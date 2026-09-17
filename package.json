@@ -2,24 +2,28 @@
   "name": "site",
   "type": "module",
   "version": "0.0.1",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "sync": "tsx scripts/sync-content.ts",
     "assets:atlas": "node scripts/prepare-atlas.mjs",
-    "predev": "npm run assets:atlas",
+    "predev": "npm run assets:atlas && npm run assets:reading",
     "dev": "npm run sync:rules && astro dev",
-    "prebuild": "npm run assets:atlas",
+    "prebuild": "npm run assets:atlas && npm run assets:reading",
     "build": "astro build",
     "postbuild": "node scripts/sites-worker.mjs",
-    "prebuild:local": "npm run assets:atlas",
+    "prebuild:local": "npm run assets:atlas && npm run assets:reading",
     "build:local": "npm run sync:rules && astro build",
     "preview": "astro preview",
     "check": "astro check",
     "test:editor": "node scripts/smoke-editor-worker.mjs",
     "astro": "astro",
     "sync:rules": "tsx scripts/sync-dataset-rules.ts",
-    "prebuild:pages": "npm run assets:atlas",
-    "build:pages": "node scripts/build-pages.mjs"
+    "prebuild:pages": "npm run assets:atlas && npm run assets:reading",
+    "build:pages": "node scripts/build-pages.mjs",
+    "assets:reading": "node scripts/prepare-reading.mjs",
+    "test:reading": "node scripts/test-reading-math.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",

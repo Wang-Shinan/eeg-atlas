@@ -1,0 +1,48 @@
+/** Numeric regression independent of the UI; SciPy fixture is generated from the very same µV samples. */
+import assert from 'node:assert/strict';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+const ts = createRequire(import.meta.url)('typescript');
+const url = new URL('../src/lib/reading/dsp.ts', import.meta.url);
+const javascript = ts.transpileModule(readFileSync(url, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText;
+const d = await import(`data:text/javascript;base64,${Buffer.from(javascript).toString('base64')}`);
+const base = d.validateRecording(JSON.parse(readFileSync(new URL('../public/reading/real-eeg.json', import.meta.url), 'utf8')));
+const reference = JSON.parse(readFileSync(new URL('../public/reading/scipy-reference.json', import.meta.url), 'utf8'));
+const close = (a, b, label) => assert.ok(Math.abs(a - b) < 1e-8 + 1e-9 * Math.abs(b), `${label}: ${a} != ${b}`);
+const index = base.channels.findIndex(c => c.name === reference.channel), x = base.values[index];
+const psd = d.welch(x, base.sampleRate), tfr = d.spectrogram(x, base.sampleRate);
+let psdError = 0, tfrError = 0;
+reference.psd.forEach((v, i) => { close(psd.psd[i], v, `Welch[${i}]`); psdError = Math.max(psdError, Math.abs(v - psd.psd[i])); });
+reference.times.forEach((t, j) => { close(tfr.times[j], t, 'STFT time'); reference.spectrogram.forEach((row, k) => { close(tfr.power[j][k], row[j], 'STFT PSD'); tfrError = Math.max(tfrError, Math.abs(tfr.power[j][k] - row[j])); }); });
+for (const selection of reference.selections) {
+  base.values.forEach((v, c) => d.welch(v.slice(...selection.samples), 160).psd.forEach((p, k) => close(p, selection.psd[c][k], 'selected window/channel')));
+}
+const pure = Array.from({ length: 1920 }, (_, j) => 20 * Math.sin(2 * Math.PI * 10 * j / 160));
+const sp = d.welch(pure, 160);
+close(sp.psd.reduce((a, b) => a + b), 200, 'Parseval, 20 µV sine RMS²');
+close(d.bandPower(sp, 8, 13), 200, 'Integrated alpha power');
+close(d.extent(pure).peakToPeak, 40, 'Sine peak-to-peak');
+assert.equal(sp.frequencies[sp.psd.indexOf(Math.max(...sp.psd))], 10);
+const dc = d.welch(Array(320).fill(5), 160); assert.ok(dc.psd.every(v => v === 0));
+const nyquist = d.welch(Array.from({ length: 320 }, (_, j) => j % 2 ? -5 : 5), 160);
+close(nyquist.psd.reduce((a, b) => a + b), 25, 'Nyquist must not be doubled');
+assert.throws(() => d.welch([1, 2], 160));
+assert.throws(() => d.validateRecording({ ...base, unit: 'V' }));
+assert.throws(() => d.validateRecording({ ...base, values: [[NaN]] }));
+const continuous = d.synthetic(base, 'continuous'), burst = d.synthetic(base, 'burst');
+const pa = d.bandPower(d.welch(continuous.values[index], 160), 8, 13), pb = d.bandPower(d.welch(burst.values[index], 160), 8, 13);
+assert.ok(pb / pa > .8 && pb / pa < 1.25, `Comparable, not identical, Welch band powers: ${pb / pa}`);
+const burstTF = d.spectrogram(burst.values[index], 160);
+const timeAtPeak = burstTF.times[burstTF.power.map(p => p[10]).indexOf(Math.max(...burstTF.power.map(p => p[10])))];
+assert.ok(timeAtPeak >= 4 && timeAtPeak <= 6);
+const low = d.synthetic(base, 'background-low'), high = d.synthetic(base, 'background-high');
+assert.deepEqual(d.synthetic(base, 'burst').values, burst.values, 'deterministic generator');
+const noisePower = data => d.bandPower(d.welch(data.values[index], 160), 15, 25);
+assert.ok(noisePower(high) > noisePower(low) * 30);
+const xy = base.channels.map(c => c.xy), values = xy.map((_, i) => i - 9), polygon = d.hull(xy);
+xy.forEach((p, i) => close(d.interpolate(p, xy, values), values[i], 'Interpolation at sensor'));
+assert.equal(d.inside([9, 9], polygon), false);
+close(d.interpolate([0, 0], xy, Array(19).fill(3)), 3, 'Constant map');
+const out = new URL('../test-artifacts/', import.meta.url); mkdirSync(out, { recursive: true });
+writeFileSync(new URL('reading-math.json', out), JSON.stringify({ status: 'passed', sourceSHA256: base.provenance.sourceSHA256, psdMaxAbsError: psdError, stftMaxAbsError: tfrError, continuousAlphaUV2: pa, burstAlphaUV2: pb, tests: ['SciPy Welch 81 bins', 'SciPy STFT all frames/bins and centres', 'sine units/Parseval/band integral', 'DC detrend', 'Nyquist scaling', 'invalid input', 'deterministic examples', 'burst localisation', 'background counterexample', 'interpolation and hull'] }, null, 2));
+console.log('PASS: calibrated spectra, SciPy equivalence, synthetic controls and spatial interpolation.');

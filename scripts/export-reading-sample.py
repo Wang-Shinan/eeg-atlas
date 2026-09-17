@@ -14,6 +14,7 @@ from scipy import signal
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'https://physionet.org/files/eegmmidb/1.0.0/'
 RECORD = 'S001/S001R02.edf'
+PINNED_SHA256 = '31a95e0a880e6c3d89960d9d62c144f24cc4e9f5d7e93c7f864ef61cd49e847e'
 CHANNELS = ['Fp1','Fp2','F7','F3','Fz','F4','F8','T7','C3','Cz','C4','T8','P7','P3','Pz','P4','P8','O1','O2']
 START, SECONDS = 10, 12
 
@@ -44,7 +45,7 @@ def main() -> None:
         edf.write_bytes(download(BASE + RECORD))
     source_bytes = edf.read_bytes()
     digest = hashlib.sha256(source_bytes).hexdigest()
-    if digest != expected:
+    if digest != expected or digest != PINNED_SHA256:
         raise ValueError('EDF does not match the publisher SHA-256 manifest')
     raw = mne.io.read_raw_edf(edf, preload=True, verbose=False)
     sf = int(raw.info['sfreq'])
@@ -114,6 +115,10 @@ def main() -> None:
     f, p = signal.welch(x, sf, window=signal.windows.hann(sf, sym=False), nperseg=sf, noverlap=sf//2, detrend='constant', scaling='density')
     ft, t, st = signal.spectrogram(x, sf, window=signal.windows.hann(sf, sym=False), nperseg=sf, noverlap=sf-20, detrend='constant', scaling='density', mode='psd')
     fixture = dict(channel='O1', frequencies=f.tolist(), psd=p.tolist(), times=t.tolist(), spectrogram=st.tolist())
+    fixture['selections'] = []
+    for first, last in [(0,160), (380,940), (1600,1920)]:
+        _, ps = signal.welch(values[:, first:last], sf, window=signal.windows.hann(sf, sym=False), nperseg=sf, noverlap=sf//2, detrend='constant', scaling='density', axis=-1)
+        fixture['selections'].append(dict(samples=[first,last], psd=ps.tolist()))
     (out / 'scipy-reference.json').write_text(json.dumps(fixture, separators=(',', ':')) + '\n')
     print(json.dumps(dict(sha256=digest, shape=values.shape, units=info['provenance']['edfPhysicalUnits'], prefilters=info['provenance']['edfPrefilters'], min=float(values.min()), max=float(values.max())), indent=2))
 
