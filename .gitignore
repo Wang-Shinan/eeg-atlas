@@ -35,3 +35,6 @@ public/atlas/data/
 test-artifacts/
 .venv/
 __pycache__/
+
+# Reproducible reading sample and SciPy reference
+public/reading/*.json

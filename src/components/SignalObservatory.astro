@@ -1,0 +1,54 @@
+---
+import { withBase } from '../lib/urls';
+import '../styles/reading.css';
+---
+<section id="signal-observatory" class="reading-observatory not-prose" data-reading data-url={withBase('/reading/real-eeg.json')} aria-label="脑电联动观察器">
+  <header class="reading-heading"><div><span>READING LAB / 读图练习</span><h3>同一段信号，三个观察角度</h3></div><button type="button" data-load>加载观察器</button></header>
+  <p data-status role="status" aria-live="polite">载入 12 秒真实记录与合成对照。运算在浏览器本地完成；没有上传或自动诊断。</p>
+  <div data-workspace hidden>
+    <div class="reading-controls">
+      <label class="reading-sample">练习样本<select data-sample aria-label="练习样本"></select></label>
+      <label>分析通道<select data-channel aria-label="分析通道"></select></label>
+      <label>波形显示<select data-count aria-label="波形显示"><option value="8">8 路概览</option><option value="19">全部 19 路</option></select></label>
+      <label>每行纵轴半幅<select data-gain aria-label="每行纵轴半幅"><option value="25">±25 µV</option><option value="50">±50 µV</option><option value="100">±100 µV</option><option value="250" selected>±250 µV</option></select></label>
+    </div>
+    <p class="reading-context" data-context></p>
+    <div class="reading-figure-head"><strong>01 / 多通道波形</strong><span>正向上 · 横轴为片段内秒数</span></div>
+    <canvas data-wave tabindex="0" aria-label="多通道波形：横向拖动选择时间段；单击放置当前游标并选择通道；方向键微调游标。也可使用下方数值输入。"></canvas>
+    <div class="reading-selection">
+      <label>选区起点 / s<input data-start type="number" value="0" min="0" max="11" step="0.00625" /></label>
+      <label>选区终点 / s<input data-end type="number" value="12" min="1" max="12" step="0.00625" /></label>
+      <button type="button" data-zoom>放大选区</button><button type="button" data-reset>全段视野</button>
+    </div>
+    <p class="reading-small" data-selection-note>拖动框选；频谱选区最短 1 秒。缩放只改变视野，纵轴只改变显示，不修改数据。</p>
+    <div class="reading-cursors">
+      <label>移动游标<select data-cursor-target aria-label="移动游标"><option value="a">A / 实线</option><option value="b">B / 虚线</option></select></label>
+      <label>A / s<input data-cursor-a type="number" min="0" max="11.99375" step="0.00625" value="4" /></label>
+      <label>B / s<input data-cursor-b type="number" min="0" max="11.99375" step="0.00625" value="4.1" /></label>
+      <output data-measure aria-live="polite"></output>
+    </div>
+    <p class="reading-small">ΔV 是两游标处的电压差，不自动等于峰峰值；1/Δt 只有在选中相邻同类周期点时才可解释为频率。键盘 ←/→ 移动一个采样点，Shift 加速。</p>
+    <div class="reading-analysis-grid">
+      <section class="reading-spectrum" aria-label="频谱与时频图">
+        <div class="reading-figure-head"><strong>02 / 选区内的频率结构</strong><select data-spectrum-view aria-label="频率视图"><option value="psd">功率谱 / PSD</option><option value="tfr">时频图 / STFT</option></select></div>
+        <canvas data-spectrum role="img" aria-label="选中通道与选区的功率谱或时频图，详细数值见下方说明"></canvas>
+        <p class="reading-small" data-spectral-note></p>
+      </section>
+      <section class="reading-map" aria-label="头皮分布">
+        <div class="reading-figure-head"><strong>03 / 头皮分布</strong><select data-map-mode aria-label="空间统计量"><option value="voltage">A 时刻电压 / µV</option><option value="power">选区频带功率 / µV²</option></select></div>
+        <div class="reading-map-options"><label>频带<select data-band aria-label="频带"></select></label><label><input data-lock type="checkbox" />锁定色标</label></div>
+        <canvas data-map tabindex="0" aria-label="俯视头皮分布：鼻尖朝上，左半球在图左；点击电极切换分析通道，亦可使用通道下拉框"></canvas>
+        <p class="reading-small" data-map-note></p>
+      </section>
+    </div>
+    <div class="reading-numbers" data-numbers aria-live="polite"></div>
+    <details class="reading-details"><summary>数值表与插值说明</summary><p>电极点才是模板位置上的通道数值。图面采用平面距离平方倒数加权插值，仅显示电极凸包内区域；不是 MNE 球面样条，也不是皮层源定位。锁定色标后超范围数值用端点颜色显示，表格保留原值。模板位置来自第二章同一 MNE 模板，不是个体测量。</p><div class="reading-table"><table><thead><tr><th>通道</th><th>A 电压 / µV</th><th>选区频带功率 / µV²</th></tr></thead><tbody data-values></tbody></table></div></details>
+    <details class="reading-details"><summary>计算参数与数据出处</summary><p>PSD：1 秒周期型 Hann 窗，逐窗去均值，50% 重叠，单边密度谱；不足一整窗的末尾不使用。STFT：同一窗，步长 0.125 秒，横坐标为窗中心，不作边缘补零。频率网格 1 Hz 不等于能分开任意相邻 1 Hz 成分。频带功率对线性插值后的 PSD 积分。频率图只显示 0–45 Hz，Gamma 按 30–45 Hz 子区间练习；计算仍保留至 Nyquist 80 Hz。PSD 与时频色标固定 −40 至 40 dB，参考为 1 µV²/Hz，超范围裁切；波形不去均值、不增加滤波。</p><p data-provenance></p><a href={withBase('/reading/real-eeg.json')} download>下载真实样本、物理单位与完整处理记录</a><span> · </span><a href="https://physionet.org/content/eegmmidb/1.0.0/" target="_blank" rel="noreferrer">PhysioNet 数据集</a><span> · </span><a href="https://physionet.org/content/eegmmidb/view-license/1.0.0/" target="_blank" rel="noreferrer">ODC-By 1.0 许可</a><p>Schalk 等 / Wadsworth Center，EEG Motor Movement/Imagery Dataset v1.0.0，DOI: 10.13026/C28G6P；BCI2000: Schalk et al., 2004，DOI: 10.1109/TBME.2004.827072。此处是经平均参考、裁剪和通道选择的教学衍生片段，不是原始 EDF 的完整复制。</p></details>
+    <div class="reading-exercise"><strong>轮到你：用观察，而不是诊断，描述这段记录</strong><label>先写下通道、时间范围、频率、振幅和分布<textarea data-description rows="3" placeholder="例如：在……技术条件下，……时间内，……通道可见……。此处不判断病因。"></textarea></label><p class="reading-small">文字只停留在本页，刷新后清空，不会上传。</p><details><summary>核对当前选区的证据</summary><p data-answer></p></details></div>
+  </div>
+  <noscript><p>交互需要 JavaScript。以下正文、自测和五频段速查仍可阅读。真实样本为 160 Hz、19 路、12 秒，已在原 64 路上作平均参考；没有片段内睁闭眼切换事件。</p></noscript>
+</section>
+<script>
+  import { initReading } from '../lib/reading/observatory';
+  document.querySelectorAll<HTMLElement>('[data-reading]').forEach(initReading);
+</script>
