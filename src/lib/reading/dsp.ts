@@ -104,7 +104,10 @@ export function synthetic(base: Recording, id: string): Recording {
     const t = j / fs; if (t < 4 || t >= 6) return 0;
     return Math.min(1, (t - 4) / .2, (6 - t) / .2);
   });
-  const norm = Math.sqrt(envelope.reduce((s, e) => s + e * e, 0) / n);
+  // Match the actual sampled carrier energy, not just the envelope RMS.
+  const carrier = envelope.map((_, j) => Math.sin(2 * Math.PI * 10 * j / fs));
+  const norm = Math.sqrt(envelope.reduce((s, e, j) => s + e * e * carrier[j] ** 2, 0) /
+    carrier.reduce((s, v) => s + v * v, 0));
   const values = base.channels.map((channel, i) => {
     let seed = 20260917 + i;
     const random = () => { seed = (Math.imul(1664525, seed) + 1013904223) >>> 0; return seed / 4294967296; };
