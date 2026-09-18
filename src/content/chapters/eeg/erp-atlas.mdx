@@ -1,0 +1,60 @@
+---
+title: "ERP 成分图谱"
+subtitle: "感觉、注意、语义、准备与评价"
+summary: "用实验、事件零点、条件差异和空间分布识别 ERP 家族；区分成分、波峰和单试次证据，浏览传统范式与原始研究。"
+order: 5
+track: "eeg"
+group: "实验与事件"
+---
+
+import ERPAtlas from '../../../components/ERPAtlas.astro';
+import TestYourself from '../../../components/TestYourself.astro';
+import KeyTakeaways from '../../../components/KeyTakeaways.astro';
+import SourceNote from '../../../components/SourceNote.astro';
+
+ERP 是按事件对齐后分析的电位变化，不是大脑在每个时间点轮流启动一个同名模块。一条平均曲线的局部峰可能包含多个重叠过程；同一过程的时间和分布也可能随任务、刺激和人而变。我们从“在什么实验里比较什么”出发，而不把 P300 读成任何情境下的第 300 毫秒必须出现一个正峰。
+
+## 先区分波峰、成分与对照
+
+N/P 常指特定参考下的负／正偏转，数字可能来自典型时间或命名历史。一个负向局部极值不能仅凭位置叫 N400；一个稳定晚期正波也不能只凭名字解释成注意力。识别时至少交代刺激或反应事件、条件对照、时间范围和分布。极性还取决于参考与差异波的相减顺序。
+
+浏览器收录感觉响应、N170、MMN、N2pc、N2、P3a/P3b、N400/P600、CNV/LRP、ERN/Pe、FRN/RewP 和 LPP。它不是规范值库。卡片指向原始研究或作者资源；绘图只展示形态与时间关系，全部是本站构造的示意。
+
+<ERPAtlas />
+
+## 感觉、偏差与目标不是一个维度
+
+简单声音或图像可以用来观察早期响应；改变注意要求时，必须尽量匹配物理输入。N170 的面孔相关对照进入类别加工，MMN 比较重复背景中的偏差，P3 类响应则需要进一步考虑新异性、目标相关性和事件概率。被动听声音、主动默数目标、点击目标，会引入不同的任务和行为。
+
+空间选择还带来一种特别的差异：N2pc 按目标侧定义对侧和同侧。左目标时的“对侧电极”到了右目标试次应交换；否则把所有试次固定作左−右，会相互抵消甚至改变问题。LRP 同样需要按反应手组织侧化，而不是机械选择两个通道相减。
+
+<SourceNote sources={[{label:'Luck 与 Hillyard，1994 · 视觉搜索的空间对照',href:'https://pubmed.ncbi.nlm.nih.gov/7964526/'},{label:'Bentin 等，1996 · 面孔感知',href:'https://pubmed.ncbi.nlm.nih.gov/20740065/'}]} />
+
+## 上下文和时间组织决定测量方式
+
+N400 可在词对或句子中研究；同样不违反语法的词，也会因期待度和关联程度不同而产生不同响应。P600 的经典材料涉及结构歧义和重分析；不要把两个名称简化成“语义错误按钮”和“语法错误按钮”。CNV 是预告和命令之间的慢偏转，LRP 可以在动作前出现；它们提醒我们，ERP 图谱中不只有一个个孤立峰。
+
+<SourceNote sources={[{label:'Kutas 与 Hillyard，1984 · 期待与语义关联',href:'https://pubmed.ncbi.nlm.nih.gov/6690995/'},{label:'Osterhout 与 Holcomb，1992 · 句法异常',href:'https://doi.org/10.1016/0749-596X(92)90039-Z'},{label:'Walter 等，1964 · CNV',href:'https://pubmed.ncbi.nlm.nih.gov/14197376/'}]} />
+
+## 把自己的错误、机器错误与结果反馈分开
+
+自己按错键应按实际反应对齐；看到机器移动错误应按机器动作或反馈对齐；收到输赢结果则按结果出现对齐。ERN、交互 ErrP、FRN/RewP 不应共用一个“错误峰”的标签。情绪图片中的 LPP 也不同于系统犯错后的反馈响应。后面任务章会分别讲它们如何变成隐式反馈，以及误报为何可能造成不必要的撤销。
+
+<SourceNote sources={[{label:'Ferrez 与 Millán，2008 · 交互错误',href:'https://pubmed.ncbi.nlm.nih.gov/18334383/'},{label:'Holroyd 等，2011 · 奖励正波',href:'https://pubmed.ncbi.nlm.nih.gov/21386699/'}]} />
+
+## 怎样从示意走向真实数据
+
+第一批复现实验可从 ERP CORE 的 N170、MMN、N2pc、N400、P3、LRP、ERN 入手：它提供范式、脚本、处理流程与样本。不要把卡片中的近似时间范围不加检查地套入另一数据集。下载后先复查任务与事件编码，按作者协议观察单试次和条件平均，再在独立数据上测量预先选定的时间窗与电极。本版尚未把 ERP CORE 文件内嵌到浏览器，不能把示意图当作该项目的结果。
+
+<SourceNote sources={[{label:'ERP CORE · 官方资源入口',href:'https://erpinfo.org/erp-core'},{label:'Kappenman 等，2021 · ERP CORE 原论文',href:'https://pubmed.ncbi.nlm.nih.gov/33099010/'}]} />
+
+<TestYourself answer="先问目标侧和参考，再问差异波；不能用固定左−右代替对−同侧">
+<Fragment slot="question">一半试次目标在左，一半在右。直接把所有试次的左后部电极减右后部电极并平均，是合适的 N2pc 分析吗？</Fragment>
+<Fragment slot="answer">不是。应先按目标侧重排对侧与同侧，再平衡条件和试次数，同时检查眼位。固定左−右是另一种量；两种目标侧的侧化变化可能在其中抵消。</Fragment>
+</TestYourself>
+
+<KeyTakeaways>
+1. 先事件与对照，再谈成分；潜伏期和电极范围不是脱离范式的识别阈值。
+2. 差异波依赖相减方向；侧化指标必须跟随目标侧或反应手。
+3. 本版图形是可复查的构造示意；真实 ERP 的检验走原始数据与实验协议。
+</KeyTakeaways>

@@ -7,7 +7,7 @@ import ContentStudio from '../components/ContentStudio.astro';
 import FigureViewer from '../components/FigureViewer.astro';
 interface Props { title?: string; description?: string; }
 const { title, description = site.description } = Astro.props;
-const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — 脑电图学习图谱`;
+const pageTitle = title ? `${title} · ${site.title}` : `${site.title} — 脑电与脑机接口`;
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const isHome = currentPath === withBase('/').replace(/\/+$/, '') || currentPath === '/';
 const hasRail = Astro.slots.has('rail');
@@ -27,9 +27,9 @@ const activeTrack = tracks.find(t => currentPath.includes(`/chapters/${t.id}/`))
   {editorEnabled && <ContentStudio />}
   <header class="site-header">
     <div class="header-inner">
-      <a class="site-brand" href={withBase('/')}><span class="brand-letter" aria-hidden="true">e.</span><span>EEG Atlas<small>脑电图学习图谱</small></span></a>
+      <a class="site-brand" href={withBase('/')}><span class="brand-letter" aria-hidden="true">e.</span><span>EEG Atlas<small>脑电与脑机接口</small></span></a>
       <nav class="top-nav" aria-label="专题导航">
-        {tracks.map(t => <a href={withBase(`/#${t.id}`)} aria-current={(isHome && t.id === 'eeg') || activeTrack === t.id ? 'page' : undefined}>{t.id === 'eeg' ? '脑电判读' : t.id === 'foundation-models' ? '基础模型' : '数据规范'}</a>)}
+        {tracks.map(t => <a href={withBase(`/#${t.id}`)} aria-current={(isHome && t.id === 'eeg') || activeTrack === t.id ? 'page' : undefined}>{t.id === 'eeg' ? '脑电与 BCI' : t.id === 'foundation-models' ? '基础模型' : '数据规范'}</a>)}
       </nav>
       <a class="header-reference" href={withBase('/sources/')}>图源与参考</a>
       {!isHome && <button class="menu-button" type="button" aria-controls="site-sidebar" aria-expanded="false" data-nav-toggle>章节目录</button>}
@@ -48,7 +48,7 @@ const activeTrack = tracks.find(t => currentPath.includes(`/chapters/${t.id}/`))
     {hasRail && <aside class="page-rail"><slot name="rail" /></aside>}
   </div>
   <FigureViewer />
-  <footer class="site-footer"><a href={withBase('/')}>EEG Atlas <span>脑电图学习图谱</span></a><p>从基础概念，到每一张脑电图。</p><a href={withBase('/sources/')}>图片出处与参考资料</a></footer>
+  <footer class="site-footer"><a href={withBase('/')}>EEG Atlas <span>脑电与脑机接口</span></a><p>从信号与实验，到人机协作。</p><a href={withBase('/sources/')}>图片出处与参考资料</a></footer>
   <script>
     const header = document.querySelector<HTMLElement>('.site-header');
     if (header) new ResizeObserver(() => document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`)).observe(header);
@@ -69,7 +69,7 @@ const activeTrack = tracks.find(t => currentPath.includes(`/chapters/${t.id}/`))
         const focusable = Array.from(sidebar.querySelectorAll<HTMLElement>('a[href], button')).filter(el => el.getClientRects().length);
         const first = focusable[0], last = focusable.at(-1);
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        else if (event.key === 'Tab' && !event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
       }
     });
     document.querySelectorAll('.prose-chapter table').forEach(table => {

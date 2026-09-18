@@ -1,139 +1,58 @@
 # EEG Atlas
 
-A chapter-based teaching site for EEG, built with Astro + TypeScript + Tailwind.
-Structurally modelled on [learningeeg.com](https://www.learningeeg.com/): a
-numbered chapter index on the home page, and each chapter as a single long
-reading flow with inline self-test questions and grouped figures.
+面向 EEG／BCI 研究者的中文交互教材，使用 Astro、TypeScript、MDX 与 Tailwind。主线从生理、空间坐标和信号观察，进入实验、ERP、刺激选择、运动、听觉、语言与状态，最后讨论神经反馈、临床边界和在线协作。
 
-## Getting started
+## BCI 第一版的范围
 
-Node 22.12+ and Python 3.12 are used for builds. Python is only needed to export
-the pinned electrode templates and anatomical meshes; the published site is
-fully static and does not need a Python server or a browser CDN.
+主线为 **18 章＋术语附录**。前三章保留已经实现的三维 MNE 电极图谱和真实 EEG 观察器。第四、五章新增合成试次实验和 15 组成分浏览卡片；所有构造图均明确标注，不是 ERP CORE 或被试实测。第六至十八章有首版正文、方法与研究入口、自测，尚未逐章嵌入真实实验数据。临床在主线收拢到一章，九个旧网址保留为带提示的参考页。
+
+详细范围、运行与验收见 [BCI 第一版说明](docs/bci-first-edition.md) 和 [内容路线](CONTENT-ROADMAP.md)。
+
+## 本地运行
+
+构建使用 Node 22.12+、Python 3.12。Python 用于离线导出固定版本电极／脑表面模板和校准真实 EEG 样本；发布后是纯静态资源，不需要 Python 后端或浏览器 CDN。
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r scripts/requirements-atlas.txt
 npm ci
-npm run dev      # prepares atlas assets, syncs dataset rules, then serves on http://localhost:4321
+npm run dev
 ```
 
-See [the electrode atlas guide](docs/electrode-atlas.md) for coordinate sources,
-reproducible exports, browser tests and limitations. Third-party template and
-surface notices are published at `public/atlas/THIRD_PARTY_NOTICES.txt`.
+首次导出需要网络。无法取得或校验真实资源时会明确失败，不静默换成合成样本。`PYTHON` 可指向虚拟环境的解释器。开发服务器按 `AGENTS.md` 的项目约定管理。
 
-| Script | What it does |
-| --- | --- |
-| `npm run sync` | Imports chapter text from the local vault into MDX; refuses to overwrite non-generated chapters |
-| `npm run sync:rules` | Imports Chinese docs from [dataset-rules](https://github.com/Omni-Intel/dataset-rules) |
-| `npm run assets:atlas` | Validates cached atlas assets or exports them from pinned Python packages |
-| `npm run dev` | Prepares atlas assets, syncs dataset rules and starts the dev server |
-| `npm run build` | Prepares atlas assets and builds `dist/`, including the Sites Worker postbuild |
-| `npm run build:local` | Prepares atlas assets, syncs dataset rules and builds locally |
-| `npm run build:pages` | Prepares atlas assets and builds the static Pages export in `dist-pages/` |
-| `npm run check` | Type-checks `.astro`, `.ts` and `.mdx` files |
+| 命令 | 用途 |
+|---|---|
+| `npm run assets:atlas` | 校验缓存或导出 MNE 布局和解剖表面 |
+| `npm run assets:reading` | 校验或生成第三章真实样本及 SciPy 对照 |
+| `npm run dev` | 准备资源、同步 Dataset Rules、启动开发服务器 |
+| `npm run build` | 生成 `dist/`，保留 Sites Worker 后处理 |
+| `npm run build:pages` | 生成 `/eeg-atlas/` 子路径的静态 `dist-pages/`，禁用在线编辑器 |
+| `npm run check` | Astro／TypeScript 检查 |
+| `npm run test:reading` | 第三章数值对照 |
+| `node scripts/test-bci.mjs` | 新主线、合成试次、卡片和原文件完整性检查 |
+| `npm run sync:rules` | 从 Omni-Intel/dataset-rules 同步规范 |
+| `npm run sync` | 旧本地资料导入流程；拒绝覆盖非 generated 的人工章节 |
 
-## Content model
+## 内容与导航
 
-There is one content collection, `chapters`, split into three tracks:
+`src/content/chapters/` 下有 `eeg/`、`foundation-models/`、`dataset-rules/` 三个专题；新增章按 `src/content.config.ts` 填写 `title`、`subtitle`、`summary`、`order`、`track`、`group`。`src/site.config.ts` 决定专题和分组顺序。显示编号按专题处理；术语表显示为附录。旧临床页由 `src/data/legacy-chapters.ts` 标记：仍生成原路由，但不进入主目录或上下章导航，并链接到对应的新章。
 
-```
-src/content/chapters/
-  eeg/                  # original teaching chapters — committed
-  foundation-models/    # written by hand — committed
-  dataset-rules/        # synced from Omni-Intel/dataset-rules — committed
-```
+手写 MDX 可使用 `TestYourself`、`KeyTakeaways`、`SourceNote`、`AtlasFigure` 等组件。`src/data/figures.ts` 和 `public/figures/sources/provenance.json` 保留图片出处；`/sources/` 从同一元数据生成。新增或改图时同时核对来源、许可、图注、章节和图形含义，不从静态图片补造事件。
 
-Every chapter's frontmatter is validated against the schema in
-`src/content.config.ts`:
+旧 `sync-content.ts` 可读取本地 vault，但其导入来源不自动获得公开发布资格；公开构建只使用已提交内容。当前章节不是旧导入文本的可随意覆盖产物。
 
-| Field | Purpose |
-| --- | --- |
-| `title`, `subtitle` | Shown in the index and the chapter header |
-| `summary` | Chapter standfirst and meta description |
-| `order` | Global position; drives numbering and prev/next links |
-| `track`, `group` | Where the chapter appears on the home page |
-| `generated` | `true` for imported chapters |
+## 交互与复现
 
-Tracks and the order of their groups are declared in `src/site.config.ts`.
+- [电极图谱](docs/electrode-atlas.md)：MNE 坐标、模板表面、坐标变换、版本与许可；不把模板当作个体测量。
+- [第三章观察器](docs/reading-observatory.md)：PhysioNet 物理单位、参考与裁剪，Welch／STFT 和插值算法、独立数值对照。
+- [BCI 版](docs/bci-first-edition.md)：合成试次定义、ERP 卡片、旧路由保留和新导航。
 
-### Imported chapters
+没有 React/Vue 等 UI 框架；交互使用局部脚本和 Canvas/WebGL。正文在禁用 JavaScript 时仍可阅读，卡片采用原生 details；交互图不工作时不声称已经展示实际信号。
 
-The optional legacy importer reads `../Learning EEG/Learning EEG Final/`.
-That local source material is not cleared for redistribution; it is not fetched
-by CI. Published EEG chapters are committed original writing. The importer
-refuses to overwrite non-generated chapters. Third-party teaching figures and
-anatomical data have their own provenance and licenses; they are not all original.
+## 检查与预览
 
-`scripts/sync-content.ts` reads that directory and recognises two conventions
-the raw Markdown expresses only implicitly:
+PR 会运行原有图谱／编辑器、第三章以及 BCI 检查。截图、数值结果、可复查源码和预览作为 Actions 产物保存。新预览脚本 `python scripts/build-bci-preview.py` 在静态构建完成后生成 `test-artifacts/bci-first-edition.zip`；解压并打开 `index.html` 可离线浏览整套内容，文献外链仍需网络。
 
-- A bold paragraph ending in `?`, followed by a heading and one explanatory
-  paragraph, becomes a `<TestYourself>` block. The heading is consumed as the
-  answer verdict, so it never reaches the table of contents.
-- A run of two or more consecutive images becomes a `<FigureTabs>` group, with
-  tab labels derived from the image file names and shared leading words stripped.
-
-To point the site at different source material, change `sourceDir` in
-`scripts/sync-content.ts` and rewrite the chapter list in
-`scripts/chapters.config.ts`.
-
-### Hand-written chapters
-
-Add an `.mdx` file under `src/content/chapters/<track>/` with the frontmatter
-fields above. The same components are available:
-
-```mdx
-import TestYourself from '../../../components/TestYourself.astro';
-
-<TestYourself answer="The short verdict">
-<Fragment slot="question">
-
-What is being asked?
-
-</Fragment>
-<Fragment slot="answer">
-
-Why that is the answer.
-
-</Fragment>
-</TestYourself>
-```
-
-## Components
-
-| Component | Notes |
-| --- | --- |
-| `TestYourself.astro` | Two-stage reveal built on nested `<details>` — no client JS |
-| `FigureTabs.astro` | Tabbed figure group; falls back to the first figure without JS |
-| `KeyTakeaways.astro` | End-of-chapter review list |
-| `TableOfContents.astro` | Sticky rail from the chapter's h2/h3 headings |
-| `FrequencyBands.astro` | Shared five-band table and original same-duration synthetic traces |
-| `ElectrodeAtlas.astro` | On-demand WebGL montage viewer; searchable coordinate list if WebGL is unavailable |
-
-There is no client UI framework. Small client scripts handle navigation,
-figures, teaching interactives and the optional content editor.
-
-## Styling
-
-Tailwind v4 is configured through `@tailwindcss/vite`, with the design tokens
-(paper, ink, rule, accent colours and the serif/sans stacks) declared in the
-`@theme` block of `src/styles/global.css`. Chapter body copy is styled by the
-`.prose-chapter` class in that same file rather than by Tailwind utilities, so
-imported Markdown picks up the editorial look without any per-file classes.
-
-## 图谱与阅读界面（2026-09）
-
-- 原始教学图与图注元数据集中在 `src/data/figures.ts`，文件位于 `public/figures/sources/`。
-- `provenance.json` 记录下载来源、作者和许可依据。保留原始图片；中文讲解写在图外。
-- `/sources/` 由同一份元数据生成，新增图片时同时填写出处、许可、图号及对应章节。
-- `AtlasFigure` 支持点击放大、原始尺寸查看、键盘关闭；原有概念示意仍保留并明确标注。
-- 章节上下篇导航仅在同一专题内连接。手机可分别打开章节目录和本页目录。
-- `npm run sync` 会拒绝覆盖非 generated 的人工章节，避免旧导入流程覆盖原创内容。
-
-### 两种发布构建
-
-`npm run build` 保留 Sites 的 Worker、数据库、媒体与在线编辑能力。
-`npm run build:pages` 将纯静态版本输出到 `dist-pages/`，使用 `/eeg-atlas/` 基础路径；GitHub Pages 没有编辑后端，因此此构建不加载编辑器。
-现有 GitHub Actions 使用静态构建；两种输出不会相互覆盖。PR 检查只验证并上传审阅产物，不部署网站。
+本次只修改内容、导航和必要交互，不升级既有依赖。CI 安装输出中的安全告警需单独审计；构建或交互通过不是安全审计、临床有效性验证或全部实体设备测试。

@@ -1,0 +1,21 @@
+---
+import '../styles/bci.css';
+---
+<section class="bci-lab not-prose" data-epoch-lab aria-label="事件与试次合成实验">
+  <header><span class="bci-eyebrow">CONTROLLED SIMULATION</span><h3>同一批试次，为什么会得到不同的平均波形？</h3><p>全部为确定性合成数据，不是 ERP CORE 或被试记录。A/B 的构造差异、噪声和伪迹已知；这里验证分析操作，不证明任何心理机制。</p></header>
+  <div class="bci-controls">
+    <label>每个条件先取<select data-count><option>1</option><option>8</option><option>32</option><option selected>64</option></select></label>
+    <label>事件对齐<select data-align><option value="stimulus">刺激锁定 · 0 = 刺激</option><option value="response">反应锁定 · 0 = 按键</option></select></label>
+    <label>刺激成分潜伏期抖动<select data-jitter><option value="0">±0 ms</option><option value="40">±40 ms</option><option value="100">±100 ms</option></select></label>
+    <label>电压显示量程<select data-range><option value="15">±15 µV</option><option value="30">±30 µV</option><option value="60">±60 µV</option></select></label>
+    <label><input data-baseline type="checkbox" checked />减去刺激前 −200～0 ms 均值</label>
+    <label><input data-reject type="checkbox" />排除已知的合成伪迹试次</label>
+  </div>
+  <p data-epoch-status role="status">启用 JavaScript 后可查看合成试次；正文与以下实验定义不受影响。</p>
+  <div class="bci-plots"><figure><canvas data-epoch-mean width="840" height="300" role="img" aria-label="A、B 条件平均和 A 减 B 差异波"></canvas><figcaption>A 条件（青色）、B 条件（橙色）、A−B（虚线）。合成 µV，正向上，横轴 ms；显示量程不改变样本，也不随条件自动缩放。</figcaption></figure><figure><canvas data-epoch-trials width="840" height="230" role="img" aria-label="A 条件单试次时间图"></canvas><figcaption>A 条件每一行是一条保留试次；固定色限 ±30 µV，蓝负红正；超出范围的颜色截断，不改动数据。</figcaption></figure></div>
+  <details><summary>构造与操作说明</summary><p>每条件固定生成 64 条记录；反应时 320～640 ms。共同的 130 ms 负偏转、370 ms 条件差异和反应前 35 ms 的偏转相加，再加相关噪声与固定偏置。A 条件每 13 条中一条有已知的 170 ms 伪迹。提高试次数采用同一数据的前缀；切换锁定只平移同一试次，不重新生成信号。更改抖动才改变构造的刺激成分时序。基线始终取刺激前，不随锁定改变。</p><p>勾选排除只是利用我们预先写入的伪迹标签，不是临床伪迹检测算法。差异波不会自动消除条件相关的伪迹。个别随机实现中，加更多试次也不保证每个点都更接近真值。</p></details>
+</section>
+<script>
+  import { initEpochLabs } from '../lib/bci/epoch-ui';
+  initEpochLabs();
+</script>
