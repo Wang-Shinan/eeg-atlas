@@ -4,93 +4,34 @@ import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import { tracks } from '../../site.config';
+import { legacyChapters } from '../../data/legacy-chapters';
 import { withBase } from '../../lib/urls';
-import {
-  chapterHref,
-  chapterNumber,
-  getChapterNeighbors,
-  getSortedChapters,
-  type Chapter,
-} from '../../lib/chapters';
-
-export const getStaticPaths = (async () => {
-  const chapters = await getSortedChapters();
-  return chapters.map((chapter) => ({
-    params: { slug: chapter.id },
-    props: { chapter },
-  }));
-}) satisfies GetStaticPaths;
-
-interface Props {
-  chapter: Chapter;
-}
-
+import { chapterHref, chapterNumber, getChapterNeighbors, getSortedChapters, type Chapter } from '../../lib/chapters';
+export const getStaticPaths = (async () => (await getSortedChapters(true)).map(chapter => ({ params: { slug: chapter.id }, props: { chapter } }))) satisfies GetStaticPaths;
+interface Props { chapter: Chapter; }
 const { chapter } = Astro.props;
 const { Content, headings } = await render(chapter);
 const { prev, next } = await getChapterNeighbors(chapter.id);
 const track = tracks.find(t => t.id === chapter.data.track);
+const replacement = legacyChapters[chapter.id];
 ---
-
 <BaseLayout title={chapter.data.title} description={chapter.data.summary}>
-  <article
-    class="chapter-article"
-    data-editor-page
-    data-editor-kind="static"
-    data-editor-track={chapter.data.track}
-    data-editor-group={chapter.data.group}
-    data-editor-order={chapter.data.order}
-    data-editor-slug={chapter.id.split('/').at(-1)}
-  >
+  <article class="chapter-article" data-editor-page data-editor-kind="static" data-editor-track={chapter.data.track} data-editor-group={chapter.data.group} data-editor-order={chapter.data.order} data-editor-slug={chapter.id.split('/').at(-1)}>
     <header class="chapter-header">
-      <a class="chapter-breadcrumb" href={withBase(`/#${chapter.data.track}`)}>{track?.label} <span>/ {chapter.data.group}</span></a>
-      <p class="chapter-kicker">
-        CHAPTER {chapterNumber(chapter)}
-      </p>
-      <h1 data-editor-key="title" class="chapter-title">
-        {chapter.data.title}
-      </h1>
+      <a class="chapter-breadcrumb" href={withBase(`/#${chapter.data.track}`)}>{track?.label} <span>/ {replacement ? '旧版参考' : chapter.data.group}</span></a>
+      <p class="chapter-kicker">{replacement ? 'ARCHIVE' : 'CHAPTER'} {chapterNumber(chapter)}</p>
+      <h1 data-editor-key="title" class="chapter-title">{chapter.data.title}</h1>
       <p data-editor-key="subtitle" class="chapter-subtitle">{chapter.data.subtitle}</p>
-      {
-        chapter.data.summary && (
-          <p data-editor-key="summary" class="chapter-summary">
-            {chapter.data.summary}
-          </p>
-        )
-      }
+      {chapter.data.summary && <p data-editor-key="summary" class="chapter-summary">{chapter.data.summary}</p>}
     </header>
-
+    {replacement && <aside class="legacy-note" role="note"><strong>旧版参考页面</strong><p>此页保留原网址和图源，不属于当前主线，正文尚未按 BCI 版标准重新审校；请勿单独据此作临床判断。</p><a href={withBase(`/chapters/${replacement}/`)}>进入对应的新章节 →</a></aside>}
     <TableOfContents headings={headings} mobile />
-    <div class="prose prose-chapter mt-10 max-w-none">
-      <Content />
-    </div>
-
+    <div class="prose prose-chapter mt-10 max-w-none"><Content /></div>
     <nav class="chapter-pagination">
-      {
-        prev ? (
-          <a
-            href={chapterHref(prev)}
-            class="rounded-lg border border-rule p-4 transition-colors hover:border-accent/50 hover:bg-accent-soft/50"
-          >
-            <span class="font-sans text-sm text-muted">上一章</span>
-            <span class="mt-1 block font-serif text-lg font-medium">{prev.data.title}</span>
-          </a>
-        ) : (
-          <span />
-        )
-      }
-      {
-        next && (
-          <a
-            href={chapterHref(next)}
-            class="rounded-lg border border-rule p-4 text-right transition-colors hover:border-accent/50 hover:bg-accent-soft/50 sm:col-start-2"
-          >
-            <span class="font-sans text-sm text-muted">下一章</span>
-            <span class="mt-1 block font-serif text-lg font-medium">{next.data.title}</span>
-          </a>
-        )
-      }
+      {prev ? <a href={chapterHref(prev)} class="rounded-lg border border-rule p-4"><span class="font-sans text-sm text-muted">上一章</span><span class="mt-1 block font-serif text-lg font-medium">{prev.data.title}</span></a> : <span />}
+      {next && <a href={chapterHref(next)} class="rounded-lg border border-rule p-4 text-right"><span class="font-sans text-sm text-muted">下一章</span><span class="mt-1 block font-serif text-lg font-medium">{next.data.title}</span></a>}
     </nav>
   </article>
-
   <TableOfContents slot="rail" headings={headings} />
 </BaseLayout>
+<style>.legacy-note{margin-top:2rem;padding:1.2rem;border:1px solid var(--color-rule);background:var(--color-accent-soft);font-size:.95rem;line-height:1.8}.legacy-note p{margin:.5rem 0}.legacy-note a{text-decoration:underline}</style>

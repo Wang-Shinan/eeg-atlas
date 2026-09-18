@@ -1,0 +1,39 @@
+---
+import { erpCards } from '../data/erp-components';
+import '../styles/bci.css';
+---
+<section class="bci-lab not-prose" data-erp-atlas aria-label="ERP 成分与范式图谱">
+  <header><span class="bci-eyebrow">EVENT → CONTRAST → COMPONENT</span><h3>ERP 成分浏览器</h3><p>先读事件、条件和分布，再看成分名。下图是手工参数化的形态示意，不是任何被试或 ERP CORE 的测量。卡片的时间范围是入门定位，不是分析阈值或正常值。</p></header>
+  <label>选择成分 <select data-erp-select>{erpCards.map(c => <option value={c.id}>{c.name}</option>)}</select></label>
+  <div class="erp-display" aria-live="polite"><p data-erp-zero>各成分的零时刻不同，请查看卡片。</p><p data-erp-contrast>差异波的符号取决于相减顺序。</p><canvas data-erp-canvas width="840" height="260" role="img" aria-label="当前成分的参数化差异波示意，任意幅度单位，非实测"></canvas><p>全图 −1000～1000 ms；正向上；任意幅度单位。CNV／LRP 等可能在 0 前出现，未模拟真实空间分布或单试次噪声。</p></div>
+  <div>{erpCards.map(c => <details class="erp-card" data-erp-card={c.id} id={`erp-${c.id}`}><summary>{c.name}</summary><dl><dt>怎么做</dt><dd>{c.task}</dd><dt>零时刻</dt><dd>{c.zero}</dd><dt>条件对照</dt><dd>{c.contrast}</dd><dt>空间观察</dt><dd>{c.region}</dd><dt>时间观察</dt><dd>{c.timing}</dd><dt>解释边界</dt><dd>{c.boundary}</dd></dl><p><a href={c.url} target="_blank" rel="noreferrer">{c.source} ↗</a></p></details>)}</div>
+</section>
+<script>
+  import { erpCards } from '../data/erp-components';
+  import { gaussian } from '../lib/bci/epochs';
+  for (const root of document.querySelectorAll<HTMLElement>('[data-erp-atlas]')) {
+    const select = root.querySelector<HTMLSelectElement>('[data-erp-select]')!;
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-erp-canvas]')!;
+    const ctx = canvas.getContext('2d');
+    function render() {
+      const c = erpCards.find(v => v.id === select.value)!;
+      root.dataset.selected = c.id;
+      root.querySelector('[data-erp-zero]')!.textContent = `0 ms：${c.zero}`;
+      root.querySelector('[data-erp-contrast]')!.textContent = `对照：${c.contrast}`;
+      root.querySelectorAll<HTMLDetailsElement>('[data-erp-card]').forEach(el => { const selected = el.dataset.erpCard === c.id; el.dataset.selected = String(selected); el.open = selected; });
+      if (!ctx) return;
+      ctx.clearRect(0, 0, 840, 260); ctx.fillStyle='#fff';ctx.fillRect(0,0,840,260);ctx.font='16px sans-serif';
+      const x = (t:number) => 60+(t+1000)/2000*730;
+      ctx.strokeStyle='#c8d3d0';ctx.beginPath();ctx.moveTo(60,130);ctx.lineTo(790,130);ctx.moveTo(x(0),25);ctx.lineTo(x(0),220);ctx.stroke();
+      ctx.fillStyle='#435b60';for(let t=-1000;t<=1000;t+=250)ctx.fillText(String(t),x(t)-16,244);ctx.fillText('ms',799,244);
+      ctx.strokeStyle='#1a7275';ctx.lineWidth=3;ctx.beginPath();
+      for(let t=-1000;t<=1000;t+=4){let v=c.sign*gaussian(t,c.center,c.width);
+        if(c.id==='sensory')v=gaussian(t,95,22)-.9*gaussian(t,160,28)+.65*gaussian(t,240,40);
+        if(c.id==='cnv')v=t>=-800&&t<=0?-(t+800)/800:t>0?-Math.exp(-t/60):0;
+        if(c.id==='lrp')v=t>=-400&&t<=0?-(t+400)/400:t>0?-Math.exp(-t/100):0;
+        const py=130-80*v;t===-1000?ctx.moveTo(x(t),py):ctx.lineTo(x(t),py);
+      }ctx.stroke();
+    }
+    select.addEventListener('change',render);render();
+  }
+</script>
