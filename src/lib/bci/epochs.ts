@@ -33,7 +33,7 @@ export function analyze(trials: Trial[], count: number, alignment: Alignment, ba
   if (![1, 8, 32, 64].includes(count)) throw new RangeError('unsupported trial count');
   const get = (c: string) => trials.filter(t => t.condition === c).slice(0, count).filter(t => !reject || !t.artifact).map(t => epoch(t, alignment, baseline));
   const a = get('A'), b = get('B');
-  const mean = (rows: number[][]) => times.map((_, j) => rows.length ? rows.reduce((s, r) => s + r[j], 0) / rows.length : 0);
+  const mean = (rows: number[][]) => rows.length ? times.map((_, j) => rows.reduce((s, r) => s + r[j], 0) / rows.length) : [];
   const avgA = mean(a), avgB = mean(b);
-  return { a, b, avgA, avgB, difference: avgA.map((v, i) => v - avgB[i]) };
+  return { a, b, avgA, avgB, difference: a.length && b.length ? avgA.map((v, i) => v - avgB[i]) : [] };
 }
