@@ -2,12 +2,12 @@
 import { withBase } from '../lib/urls';
 ---
 <section class="electrode-atlas not-prose" data-electrode-atlas data-url={withBase('/atlas/data/atlas.json')} aria-label="三维电极布局浏览器">
-  <header class="atlas-heading"><div><span>SPATIAL ATLAS / 空间图谱</span><h3>同一空间，不同记录布局</h3></div><button type="button" class="atlas-load" data-atlas-load>加载三维图谱</button></header>
-  <p class="atlas-status" data-atlas-status role="status" aria-live="polite">点击加载真实模板表面与电极位置。此组件不上传数据，也不连接外部渲染服务。</p>
+  <header class="atlas-heading"><div><span>转一转，找找位置</span><h3>这些小圆点在头的哪里？</h3></div><button type="button" class="atlas-load" data-atlas-load>加载三维图谱</button></header>
+  <p class="atlas-status" data-atlas-status role="status" aria-live="polite">点击加载后先选“俯视”，找到鼻子、左右耳和头顶；再转到侧面看看电极位置。图中使用标准头模与电极模板。</p>
   <div class="atlas-viewport" data-atlas-viewport>
     <canvas data-atlas-canvas tabindex="0" aria-label="可交互三维脑、头皮与电极；拖动旋转，滚轮或双指缩放。聚焦后方向键旋转，加减键缩放，R 复位。"></canvas>
     <canvas data-atlas-overlay aria-hidden="true"></canvas>
-    <span class="atlas-canvas-note">真实模板表面 · 非个体配准<br />电极透视显示，背面点较淡</span>
+    <span class="atlas-canvas-note">标准头模 · 展示常见位置<br />电极透视显示，背面点较淡</span>
   </div>
   <div data-atlas-controls hidden>
     <nav class="atlas-toolbar" aria-label="三维视角">

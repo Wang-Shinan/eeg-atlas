@@ -1,8 +1,8 @@
-/** Teaching convention, not universal physiological boundaries. Used by chapters 1 and 3. */
+/** Teaching convention, not universal physiological boundaries. Used by the introductory reading chapter. */
 export const frequencyBands = [
-  { name: 'Delta', symbol: 'δ', range: '0.5 ≤ f < 4 Hz', example: 2, note: '慢波的常用描述；意义取决于年龄、状态与空间分布。' },
-  { name: 'Theta', symbol: 'θ', range: '4 ≤ f < 8 Hz', example: 6, note: '可见于困倦和多种任务过程；不能只凭频段判断异常。' },
-  { name: 'Alpha', symbol: 'α', range: '8 ≤ f < 13 Hz', example: 10, note: '闭眼后部节律的常见频率范围；其他部位也可有同频活动。' },
-  { name: 'Beta', symbol: 'β', range: '13 ≤ f < 30 Hz', example: 20, note: '较快活动；观察时仍需结合分布、状态及药物等背景。' },
-  { name: 'Gamma', symbol: 'γ', range: '30 ≤ f ≤ 80 Hz', example: 40, note: '本教程采用的示例分析范围；头皮记录尤其需要排查肌电等污染。' },
+  { name: 'Delta', symbol: 'δ', range: '每秒 0.5～不足 4 周', example: 2, note: '较慢的起伏，结合睡眠等状态一起观察。' },
+  { name: 'Theta', symbol: 'θ', range: '每秒 4～不足 8 周', example: 6, note: '常在困倦和多种任务研究中遇到。' },
+  { name: 'Alpha', symbol: 'α', range: '每秒 8～不足 13 周', example: 10, note: '闭眼时后部常见的节奏在这一范围。' },
+  { name: 'Beta', symbol: 'β', range: '每秒 13～不足 30 周', example: 20, note: '较快的起伏，运动等研究会观察它的变化。' },
+  { name: 'Gamma', symbol: 'γ', range: '每秒 30～80 周（本页示例范围）', example: 40, note: '更快的起伏，测量时也要留意肌肉活动的影响。' },
 ] as const;

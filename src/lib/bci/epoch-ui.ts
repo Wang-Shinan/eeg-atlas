@@ -22,7 +22,7 @@ export function initEpochLabs() {
       const n = Number(select('[data-count]').value), range = Number(select('[data-range]').value);
       const result = analyze(makeTrials(Number(select('[data-jitter]').value)), n, align, flag('[data-baseline]'), flag('[data-reject]'));
       root.dataset.nA = String(result.a.length); root.dataset.nB = String(result.b.length); root.dataset.alignment = align;
-      const status = `实际保留 A ${result.a.length} / B ${result.b.length} 条；${align === 'stimulus' ? '刺激' : '反应'}锁定；基线${flag('[data-baseline]') ? '始终为刺激前 −200～0 ms' : '未校正'}。`;
+      const status = `实际保留 A ${result.a.length} / B ${result.b.length} 条；以${align === 'stimulus' ? '事件出现' : '按键'}为零点；${flag('[data-baseline]') ? '已减去事件前 200 毫秒的平均值' : '基线未校正'}。`;
       const clipped = [...result.avgA, ...result.avgB, ...result.difference].some(v => Math.abs(v) > range);
       root.querySelector('[data-epoch-status]')!.textContent = status + (result.a.length ? '' : '无有效 A 试次，不计算或绘制 A 平均与 A−B。') + (clipped ? '部分曲线超出显示量程，可调大量程查看。' : '');
       const width = surface(canvas, line, 300), left = 44, right = width - 18;

@@ -6,15 +6,38 @@ import { chapterHref, chapterNumber, getTrackSections } from '../lib/chapters';
 const sections = await getTrackSections();
 const featured = figures.find(f => f.id === 'posterior-alpha')!;
 const count = sections.find(s => s.track.id === 'eeg')?.groups.filter(g => g.name !== '参考').reduce((n, g) => n + g.chapters.length, 0);
-const descriptions: Record<string, string> = { '基础': '信号怎样产生，在哪里记录，怎样观察。', '实验与事件': '从事件标记和试次对照，进入 ERP 成分。', '感知与选择': '外部刺激怎样成为可区分的目标。', '行动与想象': '区分准备、执行、尝试与想象。', '认知与状态': '听觉、语言、工作记忆、反馈、情绪与睡眠。', '应用与边界': '自我调节、临床边界与在线协作。', '参考': '随时查阅；不计入主线章节。' };
+const descriptions: Record<string, string> = {
+  '基础': '头上为什么能测到电，那些起伏的线又在说什么？',
+  '实验与事件': '怎样知道一次变化与听到、看到的事情有关？',
+  '感知与选择': '看着一个目标，怎样把选择告诉电脑？',
+  '行动与想象': '手动起来之前，以及只在心里想象时，会发生什么？',
+  '认知与状态': '听谁说话、理解句子、感到费力和进入睡眠。',
+  '应用与边界': '从训练与检查，到生活中真正有帮助的工具。',
+  '参考': '用到一个名字时，回来把它接回具体例子。',
+};
 ---
 <BaseLayout>
-  <div class="home-masthead"><span class="eyebrow">THE EEG ATLAS</span><span class="edition-label">{count} 章 BCI 主线 · 交互教材第一版</span></div>
-  <section class="home-intro"><div><h1>从理解脑电，<br />到设计脑机接口<span class="title-period">。</span></h1><p>沿着信号、实验与任务，理解感知、注意、行动和内部状态。分清组平均差异、单试次解码与在线协作。</p></div><figure class="home-featured-figure"><div class="figure-heading"><span>SIGNAL → EXPERIMENT → INTERFACE</span><a href={withBase('/chapters/eeg/terminology-and-waveforms/')}>从一段真实记录开始 ↗</a></div><a href={withBase(featured.src)} data-figure-open data-figure-title={featured.title} aria-label="放大查看后部 alpha 原图" target="_blank" rel="noopener"><img src={withBase(featured.src)} alt={featured.alt} width={featured.width} height={featured.height} decoding="async" fetchpriority="high" /></a><figcaption><strong>先理解测量，再谈解码。</strong><span>Andrii Cherninskyi · <a href={featured.sourceUrl} target="_blank" rel="noreferrer">原图 / CC BY-SA 4.0</a></span></figcaption></figure></section>
-  <p class="edition-note">前三章保留真实样本观察与三维图谱。第四、五章新增明确标注的合成教学演示；其余任务已有首版正文、对照设计和原始研究入口，尚未逐章内嵌真实实验数据。临床异常收拢到一章，旧网址保留为参考。</p>
+  <div class="home-masthead"><span class="eyebrow">THE EEG ATLAS</span><span class="edition-label">{count} 章 · 从零认识脑电</span></div>
+  <section class="home-intro">
+    <div>
+      <h1>头上的几条线，<br />怎样帮我们了解大脑<span class="title-period">？</span></h1>
+      <p>听见一声响、想象握拳、慢慢睡着……我们从这些熟悉的经历出发，看看科学家怎样借助脑电寻找线索，一步步认识脑机接口。</p>
+      <a class="home-start" href={withBase('/chapters/eeg/basic-electrophysiology/')}>从第一章开始：头上为什么能测到电？ →</a>
+    </div>
+    <figure class="home-featured-figure">
+      <div class="figure-heading"><span>从一条曲线开始</span><a href={withBase('/chapters/eeg/terminology-and-waveforms/')}>一起看懂这条线 ↗</a></div>
+      <a href={withBase(featured.src)} data-figure-open data-figure-title={featured.title} aria-label="放大查看后脑部位的脑电起伏" target="_blank" rel="noopener"><img src={withBase(featured.src)} alt={featured.alt} width={featured.width} height={featured.height} decoding="async" fetchpriority="high" /></a>
+      <figcaption><strong>先看它起伏得多快，再慢慢认识它的名字。</strong><span>Andrii Cherninskyi · <a href={featured.sourceUrl} target="_blank" rel="noreferrer">原图 / CC BY-SA 4.0</a></span></figcaption>
+    </figure>
+  </section>
+  <p class="edition-note">每章从一个具体问题开始，用例子和图示逐步解释。读完后，试着用自己的话讲给别人听。想进一步查方法时，可以展开章末的“继续了解”；图旁会说明它是真实记录还是教学示意。</p>
   {sections.map(section => <section id={section.track.id} class:list={['course-section', section.track.id !== 'eeg' && 'secondary-course']}>
-    <header class="section-heading"><div><span class="eyebrow">{section.track.id === 'eeg' ? '01 / EEG & BCI' : section.track.id === 'foundation-models' ? '02 / FOUNDATION MODELS' : '03 / DATASET RULES'}</span><h2>{section.track.label}</h2></div><p>{section.track.tagline}</p></header>
+    <header class="section-heading"><div><span class="eyebrow">{section.track.id === 'eeg' ? '01 / 从零开始' : section.track.id === 'foundation-models' ? '02 / 进阶专题' : '03 / 研究资料'}</span><h2>{section.track.label}</h2></div><p>{section.track.tagline}</p></header>
     <div class="course-groups">{section.groups.map((group, index) => <section class="course-group"><header><span class="group-index">{String(index + 1).padStart(2, '0')}</span><div><h3>{group.name}</h3>{descriptions[group.name] && <p>{descriptions[group.name]}</p>}</div></header><ul>{group.chapters.map(chapter => <li><a href={chapterHref(chapter)}><span class="chapter-no">{chapterNumber(chapter)}</span><span class="chapter-label"><strong>{chapter.data.title}</strong><span>{chapter.data.subtitle}</span></span><span class="chapter-arrow" aria-hidden="true">↗</span></a></li>)}</ul></section>)}</div>
   </section>)}
 </BaseLayout>
-<style>.edition-note{max-width:80ch;padding:1rem 0;border-top:1px solid var(--color-rule);font-size:.92rem;color:var(--color-muted);line-height:1.9}</style>
+<style>
+  .edition-note{max-width:80ch;padding:1rem 0;border-top:1px solid var(--color-rule);font-size:.92rem;color:var(--color-muted);line-height:1.9}
+  .home-start{display:inline-block;margin-top:1.25rem;color:var(--color-accent);font-size:1rem;line-height:1.8;text-decoration:underline;text-underline-offset:.25em}
+  .home-start:focus-visible{outline:2px solid currentColor;outline-offset:5px}
+</style>

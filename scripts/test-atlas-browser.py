@@ -1,6 +1,7 @@
 """Smoke-test the built Pages site at its real base path; save review screenshots."""
 import functools
 import json
+import os
 import tempfile
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -20,13 +21,14 @@ with tempfile.TemporaryDirectory() as temporary:
     url = f'http://127.0.0.1:{server.server_port}/eeg-atlas'
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader'])
+            browser = p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader'], **({'executable_path': os.environ['CHROMIUM_EXECUTABLE']} if os.environ.get('CHROMIUM_EXECUTABLE') else {}))
             page = browser.new_page(viewport={'width': 1440, 'height': 1100}, device_scale_factor=1)
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             response = page.goto(url + '/chapters/eeg/basic-electrophysiology/')
             assert response and response.status == 200
-            assert 'Gamma' in page.locator('main').inner_text()
+            assert page.locator('.signal-formation li').count() == 4
+            page.get_by_text('继续了解：研究方法与资料出处', exact=True).click()
             assert '切向' in page.locator('main').inner_text()
             page.screenshot(path=str(OUT / 'chapter-1.png'), full_page=True)
             response = page.request.get(url + '/atlas/data/atlas.json')
@@ -77,7 +79,7 @@ with tempfile.TemporaryDirectory() as temporary:
             assert 'Gamma' in plain_page.locator('main').inner_text()
             plain.close()
             assert not errors, errors
-            (OUT / 'results.json').write_text(json.dumps({'status': 'passed', 'layouts': counts, 'surfaces': [m['name'] for m in data['meshes']], 'checks': ['Pages base path', 'shared gamma content', 'WebGL', 'layout overlay', 'variant switch', 'search/select', 'keyboard', 'empty selection', 'mobile', 'no-JS content'], 'pageErrors': errors}, ensure_ascii=False, indent=2))
+            (OUT / 'results.json').write_text(json.dumps({'status': 'passed', 'layouts': counts, 'surfaces': [m['name'] for m in data['meshes']], 'checks': ['Pages base path', 'plain-language formation diagram and optional technical detail', 'WebGL', 'layout overlay', 'variant switch', 'search/select', 'keyboard', 'empty selection', 'mobile', 'no-JS content'], 'pageErrors': errors}, ensure_ascii=False, indent=2))
             browser.close()
     finally:
         server.shutdown()

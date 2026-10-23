@@ -24,7 +24,7 @@ const replacement = legacyChapters[chapter.id];
       <p data-editor-key="subtitle" class="chapter-subtitle">{chapter.data.subtitle}</p>
       {chapter.data.summary && <p data-editor-key="summary" class="chapter-summary">{chapter.data.summary}</p>}
     </header>
-    {replacement && <aside class="legacy-note" role="note"><strong>旧版参考页面</strong><p>此页保留原网址和图源，不属于当前主线，正文尚未按 BCI 版标准重新审校；请勿单独据此作临床判断。</p><a href={withBase(`/chapters/${replacement}/`)}>进入对应的新章节 →</a></aside>}
+    {replacement && <aside class="legacy-note" role="note"><strong>旧版参考页面</strong><p>此页保留原网址和图源，不属于当前主线，正文尚未按当前科普主线重新审校；请勿单独据此作临床判断。</p><a href={withBase(`/chapters/${replacement}/`)}>进入对应的新章节 →</a></aside>}
     <TableOfContents headings={headings} mobile />
     <div class="prose prose-chapter mt-10 max-w-none"><Content /></div>
     <nav class="chapter-pagination">

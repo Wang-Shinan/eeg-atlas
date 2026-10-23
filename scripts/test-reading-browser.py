@@ -110,7 +110,7 @@ with tempfile.TemporaryDirectory() as temporary:
             page.set_viewport_size({'width':1440,'height':1100})
             page.screenshot(path=str(OUT / 'chapter-3.png'), full_page=True)
             plain = browser.new_context(java_script_enabled=False); plain_page = plain.new_page(); plain_page.goto(url + PAGE)
-            assert '形状与组织方式' in plain_page.locator('main').inner_text()
+            assert '起伏的大小，与快慢是两件事' in plain_page.locator('main').inner_text()
             assert 'Gamma' in plain_page.locator('main').text_content(); plain.close()
             failed = browser.new_page(); failed.on('pageerror', lambda e: errors.append(str(e)))
             failed.route('**/reading/real-eeg.json', lambda route: route.fulfill(status=503, body='Unavailable'))

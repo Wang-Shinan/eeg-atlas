@@ -10,6 +10,8 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 
 ## Documentation
 
+For EEG curriculum writing, follow the reader goal and acceptance criteria in `GOAL.md`. Introduce concrete phenomena before terminology and keep technical procedures optional.
+
 Full documentation: https://docs.astro.build
 
 Consult these guides before working on related tasks:

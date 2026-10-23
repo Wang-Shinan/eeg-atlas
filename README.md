@@ -1,12 +1,14 @@
 # EEG Atlas
 
-面向 EEG／BCI 研究者的中文交互教材，使用 Astro、TypeScript、MDX 与 Tailwind。主线从生理、空间坐标和信号观察，进入实验、ERP、刺激选择、运动、听觉、语言与状态，最后讨论神经反馈、临床边界和在线协作。
+面向第一次接触脑电的中文读者，从听见声音、想象握拳、进入睡眠等熟悉经历出发，逐步解释脑电测量、实验和脑机接口。网站使用 Astro、TypeScript、MDX 与 Tailwind。
 
-## BCI 第一版的范围
+## 当前阅读主线
 
-主线为 **18 章＋术语附录**。前三章保留已经实现的三维 MNE 电极图谱和真实 EEG 观察器。第四、五章新增合成试次实验和 15 组成分浏览卡片；所有构造图均明确标注，不是 ERP CORE 或被试实测。第六至十八章有首版正文、方法与研究入口、自测，尚未逐章嵌入真实实验数据。临床在主线收拢到一章，九个旧网址保留为带提示的参考页。
+主线为 **18 章＋术语附录**。首页和各章按“具体问题 → 现象与解释 → 名称 → 练习”的思路组织；详细算法、参数与资料出处放在可选的深入阅读中。写作目标、验收约定和后续读者试读计划见 [GOAL.md](GOAL.md)。
 
-详细范围、运行与验收见 [BCI 第一版说明](docs/bci-first-edition.md) 和 [内容路线](CONTENT-ROADMAP.md)。
+第二章保留 MNE 三维电极模板，第三章使用真实 EEG 样本。第四、五章的试次与 ERP 曲线为明确标注的合成教学演示；第六至十八章使用文字例子与原始研究入口，尚未逐章内嵌真实实验数据。基础模型、Dataset Rules 和九个旧临床参考页属于进阶或存档内容。
+
+详细运行与验证见 [课程说明](docs/bci-first-edition.md) 和 [内容路线](CONTENT-ROADMAP.md)。技术检查通过不等于已通过零基础读者的理解测试。
 
 ## 本地运行
 
@@ -31,7 +33,7 @@ npm run dev
 | `npm run build:pages` | 生成 `/eeg-atlas/` 子路径的静态 `dist-pages/`，禁用在线编辑器 |
 | `npm run check` | Astro／TypeScript 检查 |
 | `npm run test:reading` | 第三章数值对照 |
-| `node scripts/test-bci.mjs` | 新主线、合成试次、卡片和原文件完整性检查 |
+| `node scripts/test-bci.mjs` | 主线结构、合成试次、卡片和依赖完整性检查 |
 | `npm run sync:rules` | 从 Omni-Intel/dataset-rules 同步规范 |
 | `npm run sync` | 旧本地资料导入流程；拒绝覆盖非 generated 的人工章节 |
 

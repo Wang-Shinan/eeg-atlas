@@ -3,10 +3,10 @@ import { erpCards } from '../data/erp-components';
 import '../styles/bci.css';
 ---
 <section class="bci-lab not-prose" data-erp-atlas aria-label="ERP 成分与范式图谱">
-  <header><span class="bci-eyebrow">EVENT → CONTRAST → COMPONENT</span><h3>ERP 成分浏览器</h3><p>先读事件、条件和分布，再看成分名。下图是手工参数化的形态示意，不是任何被试或 ERP CORE 的测量。卡片的时间范围是入门定位，不是分析阈值或正常值。</p></header>
-  <label>选择成分 <select data-erp-select>{erpCards.map(c => <option value={c.id}>{c.name}</option>)}</select></label>
-  <div class="erp-display" aria-live="polite"><p data-erp-zero>各成分的零时刻不同，请查看卡片。</p><p data-erp-contrast>差异波的符号取决于相减顺序。</p><canvas data-erp-canvas width="840" height="260" role="img" aria-label="当前成分的参数化差异波示意，任意幅度单位，非实测"></canvas><p>全图 −1000～1000 ms；正向上；任意幅度单位。CNV／LRP 等可能在 0 前出现，未模拟真实空间分布或单试次噪声。</p></div>
-  <div>{erpCards.map(c => <details class="erp-card" data-erp-card={c.id} id={`erp-${c.id}`}><summary>{c.name}</summary><dl><dt>怎么做</dt><dd>{c.task}</dd><dt>零时刻</dt><dd>{c.zero}</dd><dt>条件对照</dt><dd>{c.contrast}</dd><dt>空间观察</dt><dd>{c.region}</dd><dt>时间观察</dt><dd>{c.timing}</dd><dt>解释边界</dt><dd>{c.boundary}</dd></dl><p><a href={c.url} target="_blank" rel="noreferrer">{c.source} ↗</a></p></details>)}</div>
+  <header><span class="bci-eyebrow">先选一个你想了解的问题</span><h3>从实验认识大脑的回应</h3><p>每张卡片先解释实验怎样安排，再给出研究名称。曲线是教学示意，用来说明大致的时间关系；原始研究可从卡片链接查阅。</p></header>
+  <label>想了解哪种情境 <select data-erp-select>{erpCards.map(c => <option value={c.id}>{c.name}</option>)}</select></label>
+  <div class="erp-display" aria-live="polite"><p data-erp-zero>各成分的零时刻不同，请查看卡片。</p><p data-erp-contrast>差异波的符号取决于相减顺序。</p><canvas data-erp-canvas width="840" height="260" role="img" aria-label="当前成分的参数化差异波示意，任意幅度单位，非实测"></canvas><p>横轴从事件前一秒到后一秒，0 是卡片说明的事件时刻；1000 ms 为一秒。曲线高低是人为设定的示意大小。</p></div>
+  <div>{erpCards.map(c => <details class="erp-card" data-erp-card={c.id} id={`erp-${c.id}`}><summary>{c.name}</summary><dl><dt>实验怎么安排</dt><dd>{c.task}</dd><dt>从哪一刻看</dt><dd>{c.zero}</dd><dt>比较什么</dt><dd>{c.contrast}</dd></dl><details><summary>继续看：位置、时间与解释范围</summary><dl><dt>常看哪些位置</dt><dd>{c.region}</dd><dt>常看哪段时间</dt><dd>{c.timing}</dd><dt>怎样理解结果</dt><dd>{c.boundary}</dd></dl></details><p><a href={c.url} target="_blank" rel="noreferrer">{c.source} ↗</a></p></details>)}</div>
 </section>
 <script>
   import { erpCards } from '../data/erp-components';

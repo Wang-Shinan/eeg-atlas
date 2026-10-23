@@ -21,10 +21,12 @@ for(const t of trials){const a=epoch(t,'stimulus',true);assert.ok(Math.abs(a.sli
 const root='src/content/chapters/eeg';const active=fs.readdirSync(root).filter(n=>n.endsWith('.mdx')&&!legacyChapters['eeg/'+n.replace(/\.mdx$/,'')]);
 const main=active.filter(n=>n!=='glossary.mdx').map(n=>({name:n,...matter(fs.readFileSync(path.join(root,n),'utf8'))}));
 assert.equal(main.length,18);assert.deepEqual(main.map(x=>x.data.order).sort((a,b)=>a-b),Array.from({length:18},(_,i)=>i+1));
-for(const ch of main.filter(c=>c.data.order>=4)){assert.ok(ch.content.length>1200, ch.name+' needs substantive text');assert.ok(ch.content.includes('SourceNote'),ch.name);assert.ok(ch.content.includes('TestYourself'),ch.name);}
+for(const ch of main){assert.ok(ch.content.length>1200, ch.name+' needs substantive text');assert.ok(ch.content.includes('SourceNote'),ch.name);assert.ok(ch.content.includes('TestYourself'),ch.name);}
 assert.equal(Object.keys(legacyChapters).length,9);for(const target of Object.values(legacyChapters))assert.ok(fs.existsSync('src/content/chapters/'+target+'.mdx'));
 assert.equal(erpCards.length,15);assert.equal(new Set(erpCards.map(c=>c.id)).size,15);for(const c of erpCards){for(const key of ['task','zero','contrast','region','timing','boundary','source'])assert.ok(c[key].trim().length>0,`${c.id}.${key}`);assert.ok(new URL(c.url).protocol==='https:');}
-const preserved={'src/content/chapters/eeg/basic-electrophysiology.mdx':'b4b21db13697ae197faa8573442e7abc406ad50c','src/content/chapters/eeg/montages-and-technical-components.mdx':'142a60804e9a6367fc88fb1eefda1bb4c3749c2f','src/content/chapters/eeg/terminology-and-waveforms.mdx':'ea194c38a2f12e9f3212e8272bb9c36eb25972d3','package.json':'65a0c85946b273790b3fca744c9b47db3693f564','package-lock.json':'621a16d0a3dcb28fcfde322de2fb73ce776f62f2'};
+// Chapters 1–3 are now intentionally rewritten under GOAL.md and use the
+// same content checks above as the rest of the curriculum. Dependency pins remain fixed.
+const preserved={'package.json':'65a0c85946b273790b3fca744c9b47db3693f564','package-lock.json':'621a16d0a3dcb28fcfde322de2fb73ce776f62f2'};
 for(const [p,sha]of Object.entries(preserved)){const data=fs.readFileSync(p);assert.equal(crypto.createHash('sha1').update(`blob ${data.length}\0`).update(data).digest('hex'),sha,`Unexpected change: ${p}`);}
 fs.mkdirSync('test-artifacts',{recursive:true});fs.writeFileSync('test-artifacts/bci-math-content.json',JSON.stringify({pass:true,chapters:18,legacy:9,cards:15,trialConfigurations:3*4*2*2*2,syntheticOnly:true,preserved},null,2));
-console.log('PASS: 96 synthetic configurations, baseline/re-alignment, 18 chapters, 9 legacy routes, 15 ERP cards; original chapters/dependencies unchanged.');
+console.log('PASS: 96 synthetic configurations, baseline/re-alignment, 18 chapters, 9 legacy routes, 15 ERP cards; all main chapters have sources and exercises; dependencies unchanged.');

@@ -6,11 +6,6 @@ const trace = (frequency: number, baseline: number) => Array.from({ length: 1001
 const mixture = Array.from({ length: 1001 }, (_, i) => `${i ? 'L' : 'M'}${160 + i * 0.68},${(390 - 13 * Math.sin(4 * Math.PI * i / 1000) - 7 * Math.sin(40 * Math.PI * i / 1000)).toFixed(2)}`).join(' ');
 ---
 <section class="frequency-bands not-prose" aria-label="五类常用 EEG 频段">
-  <div class="band-table-wrap"><table>
-    <thead><tr><th scope="col">频段</th><th scope="col">本教程的数值约定</th>{!compact && <th scope="col">阅读提示</th>}</tr></thead>
-    <tbody>{frequencyBands.map(b => <tr><th scope="row">{b.symbol} · {b.name}</th><td>{b.range}</td>{!compact && <td>{b.note}</td>}</tr>)}</tbody>
-  </table></div>
-  <p class="band-note">频段边界因教材、任务和分析协议而异。这里用不重叠的区间避免端点歧义；80 Hz 不是 gamma 的生理上限，0.5 Hz 以下的慢变化也并非不存在。研究报告应写出实际频率范围。</p>
   {!compact && <figure>
     <div class="band-plot-scroll"><svg viewBox="0 0 880 450" role="img" aria-label="相同一秒时间窗和相同振幅的 2、6、10、20、40 Hz 合成波形，以及 2 与 20 Hz 的叠加示意">
       <text x="160" y="23" class="plot-caption">每条波形均显示 1 秒；前五行振幅相同</text>
@@ -18,8 +13,13 @@ const mixture = Array.from({ length: 1001 }, (_, i) => `${i ? 'L' : 'M'}${160 + 
       {frequencyBands.map((b, i) => <g><text x="18" y={64 + i * 62} class="band-label">{b.symbol} · {b.example} Hz</text><line x1="160" x2="840" y1={58 + i * 62} y2={58 + i * 62} class="baseline" /><path d={trace(b.example, 58 + i * 62)} class="trace" /></g>)}
       <text x="18" y="385" class="band-label">混合示例</text><text x="18" y="403" class="tick">2 Hz + 20 Hz</text><path d={mixture} class="trace mix" />
     </svg></div>
-    <figcaption>原创合成示意，不是患者记录。统一振幅只用于隔离“频率”这个变量，不代表真实 EEG 各频段的振幅相同；最后一行说明一条曲线可以同时含有快、慢成分。</figcaption>
+    <figcaption>合成示意：每行都是一秒，先数数各有几次完整起伏。前五行特意画成同样大小，方便只比较快慢；最后一行把快、慢两种起伏叠在一起。</figcaption>
   </figure>}
+  <div class="band-table-wrap"><table>
+    <thead><tr><th scope="col">频段</th><th scope="col">起伏有多快</th>{!compact && <th scope="col">阅读提示</th>}</tr></thead>
+    <tbody>{frequencyBands.map(b => <tr><th scope="row">{b.symbol} · {b.name}</th><td>{b.range}</td>{!compact && <td>{b.note}</td>}</tr>)}</tbody>
+  </table></div>
+  <p class="band-note">这些名称把快慢分组，方便交流；不同研究采用的具体范围会有差别。表中列的是本页约定，实际活动还可以更慢或更快。</p>
 </section>
 <style>
   .frequency-bands { margin: 2rem 0; font-family: var(--font-sans, sans-serif); }
